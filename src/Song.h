@@ -31,75 +31,70 @@
 
 #include <QString>
 
-#include "Notation.h"
 #include "Conductor.h"
+#include "Notation.h"
 #include "TrackList.h"
 
-#define PC_KEY_LOWEST_NOTE    58
-#define PC_KEY_HIGHEST_NOTE    75
+#define PC_KEY_LOWEST_NOTE 58
+#define PC_KEY_HIGHEST_NOTE 75
 
 class CSong : public CConductor
 {
 public:
-    CSong()
-    {
-        CStavePos::setKeySignature( NOT_USED, 0 );
-        m_midiFile = new CMidiFile;
-        m_trackList = new CTrackList;
+  CSong()
+  {
+    CStavePos::setKeySignature(NOT_USED, 0);
+    m_midiFile = new CMidiFile;
+    m_trackList = new CTrackList;
 
-        reset();
-    }
+    reset();
+  }
 
-    ~CSong()
-    {
-        delete m_midiFile;
-        delete m_trackList;
-    }
+  ~CSong()
+  {
+    delete m_midiFile;
+    delete m_trackList;
+  }
 
-    void reset()
-    {
-        m_reachedMidiEof = false;
-        m_findChord.reset();
-    }
+  void reset()
+  {
+    m_reachedMidiEof = false;
+    m_findChord.reset();
+  }
 
-    void init2(CScore * scoreWin, CSettings* settings);
-    eventBits_t task(int ticks);
-    bool pcKeyPress(int key, bool down);
-    void loadSong(const QString &filename);
-    void regenerateChordQueue();
+  void init2(CScore* scoreWin, CSettings* settings);
+  eventBits_t task(int ticks);
+  bool pcKeyPress(int key, bool down);
+  void loadSong(const QString& filename);
+  void regenerateChordQueue();
 
-    void rewind();
+  void rewind();
 
-    void playFromStartBar()
-    {
-        rewind();
-        playMusic(true);
-    }
+  void playFromStartBar()
+  {
+    rewind();
+    playMusic(true);
+  }
 
+  void setActiveHand(whichPart_t hand);
+  whichPart_t getActiveHand() { return CNote::getActiveHand(); }
 
+  void setActiveChannel(int part);
+  void setPlayMode(playMode_t mode);
+  CTrackList* getTrackList() { return m_trackList; }
+  void refreshScroll();
 
-    void setActiveHand(whichPart_t hand);
-    whichPart_t getActiveHand(){return CNote::getActiveHand();}
-
-    void setActiveChannel(int part);
-    void setPlayMode(playMode_t mode);
-    CTrackList* getTrackList() {return m_trackList;}
-    void refreshScroll();
-
-
-    QString getSongTitle() {return m_songTitle;}
+  QString getSongTitle() { return m_songTitle; }
 
 private:
-    void midiFileInfo();
+  void midiFileInfo();
 
-
-    CMidiFile * m_midiFile;
-    CFindChord m_findChord;
-    bool m_reachedMidiEof;
-    CChord m_fakeChord;  // the chord played with the tab key
-    CTrackList* m_trackList;
-    QString m_songTitle;
+  CMidiFile* m_midiFile;
+  CFindChord m_findChord;
+  bool m_reachedMidiEof;
+  CChord m_fakeChord; // the chord played with the tab key
+  CTrackList* m_trackList;
+  QString m_songTitle;
 };
 
-#endif  // __SONG_H__
-
+#endif // __SONG_H__

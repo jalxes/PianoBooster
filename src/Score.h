@@ -26,134 +26,130 @@
 */
 /*********************************************************************************/
 
-
-
 #ifndef _SCORE_H_
 #define _SCORE_H_
 
-#include "Scroll.h"
 #include "Piano.h"
+#include "Scroll.h"
 #include "Settings.h"
-
 
 class CScore : public CDraw
 {
 public:
+  CScore(CSettings* settings);
 
-    CScore(CSettings* settings);
+  ~CScore();
 
-    ~CScore();
+  void init();
 
-    void init();
-
-    //! add a midi event to be analysed and displayed on the score
-    void midiEventInsert(CMidiEvent event)
-    {   size_t i;
-        for (i=0; i < arraySize(m_scroll); i++)
-        {
-            m_scroll[i]->midiEventInsert(event);
-        }
+  //! add a midi event to be analysed and displayed on the score
+  void midiEventInsert(CMidiEvent event)
+  {
+    size_t i;
+    for (i = 0; i < arraySize(m_scroll); i++) {
+      m_scroll[i]->midiEventInsert(event);
     }
+  }
 
-    //! first check if there is space to add a midi event
-    int midiEventSpace()
+  //! first check if there is space to add a midi event
+  int midiEventSpace()
+  {
+    size_t i;
+    int minSpace;
+    int space;
+    minSpace = 1000;
+    for (i = 0; i < arraySize(m_scroll); i++) // this maybe slow
     {
-        size_t i;
-        int minSpace;
-        int space;
-        minSpace = 1000;
-        for (i=0; i< arraySize(m_scroll); i++) // this maybe slow
-        {
-            space = m_scroll[i]->midiEventSpace();
-            if (space < minSpace)
-                minSpace = space;
-        }
-        return minSpace;
+      space = m_scroll[i]->midiEventSpace();
+      if (space < minSpace)
+        minSpace = space;
     }
+    return minSpace;
+  }
 
-    void transpose(int semitones)
-    {   size_t i;
-        for (i=0; i< arraySize(m_scroll); i++)
-            m_scroll[i]->transpose(semitones);
+  void transpose(int semitones)
+  {
+    size_t i;
+    for (i = 0; i < arraySize(m_scroll); i++)
+      m_scroll[i]->transpose(semitones);
+  }
+
+  void reset()
+  {
+    size_t i;
+    for (i = 0; i < arraySize(m_scroll); i++)
+      m_scroll[i]->reset();
+  }
+
+  void drawScrollingSymbols(bool show = true)
+  {
+    size_t i;
+    for (i = 0; i < arraySize(m_scroll); i++)
+      m_scroll[i]->drawScrollingSymbols(show);
+  }
+
+  void scrollDeltaTime(int ticks)
+  {
+    size_t i;
+    for (i = 0; i < arraySize(m_scroll); i++)
+      m_scroll[i]->scrollDeltaTime(ticks);
+  }
+
+  void setRatingObject(CRating* rating) { m_rating = rating; }
+
+  CPiano* getPianoObject() { return m_piano; }
+
+  void setPlayedNoteColor(int note,
+                          CColor color,
+                          int wantedDelta,
+                          int pianistTimming = NOT_USED)
+  {
+    if (m_activeScroll >= 0)
+      m_scroll[m_activeScroll]->setPlayedNoteColor(
+        note, color, wantedDelta, pianistTimming);
+  }
+
+  void setActiveChannel(int channel)
+  {
+    int newActiveSroll;
+
+    if (channel < 0 || channel >= static_cast<int>(arraySize(m_scroll)))
+      return;
+    newActiveSroll = channel;
+
+    if (m_activeScroll != newActiveSroll) {
+      if (m_activeScroll >= 0)
+        m_scroll[m_activeScroll]->showScroll(false);
+      m_activeScroll = newActiveSroll;
+      m_scroll[m_activeScroll]->showScroll(true);
     }
+  }
 
-    void reset()
-    {   size_t i;
-        for (i=0; i< arraySize(m_scroll); i++)
-            m_scroll[i]->reset();
-    }
+  void refreshScroll()
+  {
+    if (m_activeScroll >= 0)
+      m_scroll[m_activeScroll]->refresh();
+  }
 
-    void drawScrollingSymbols(bool show = true)
-    {   size_t i;
-        for (i=0; i< arraySize(m_scroll); i++)
-            m_scroll[i]->drawScrollingSymbols(show);
-    }
+  void setDisplayHand(whichPart_t hand)
+  {
+    CDraw::setDisplayHand(hand);
+    refreshScroll();
+  }
 
-    void scrollDeltaTime(int ticks)
-    {   size_t i;
-        for (i=0; i< arraySize(m_scroll); i++)
-            m_scroll[i]->scrollDeltaTime(ticks);
-    }
-
-    void setRatingObject(CRating* rating)
-    {
-        m_rating = rating;
-    }
-
-    CPiano* getPianoObject() { return m_piano;}
-
-    void setPlayedNoteColor(int note, CColor color, int wantedDelta, int pianistTimming = NOT_USED)
-    {
-        if (m_activeScroll>=0)
-            m_scroll[m_activeScroll]->setPlayedNoteColor(note, color, wantedDelta, pianistTimming);
-    }
-
-
-    void setActiveChannel(int channel)
-    {
-        int newActiveSroll;
-
-        if (channel < 0 || channel >= static_cast<int>(arraySize(m_scroll)))
-            return;
-        newActiveSroll = channel;
-
-        if (m_activeScroll != newActiveSroll)
-        {
-            if (m_activeScroll>=0)
-                m_scroll[m_activeScroll]->showScroll(false);
-            m_activeScroll = newActiveSroll;
-            m_scroll[m_activeScroll]->showScroll(true);
-        }
-    }
-
-    void refreshScroll()
-    {
-        if (m_activeScroll>=0)
-            m_scroll[m_activeScroll]->refresh();
-    }
-
-
-    void setDisplayHand(whichPart_t hand)
-    {
-        CDraw::setDisplayHand(hand);
-        refreshScroll();
-    }
-
-    void drawScore();
-    void drawScroll(bool refresh);
-    void drawPianoKeyboard();
+  void drawScore();
+  void drawScroll(bool refresh);
+  void drawPianoKeyboard();
 
 protected:
-    CPiano* m_piano;
-
+  CPiano* m_piano;
 
 private:
-    CRating* m_rating;
-    CScroll* m_scroll[MAX_MIDI_CHANNELS];
-    int m_activeScroll;
-    GLuint m_scoreDisplayListId;
-    GLuint m_stavesDisplayListId;
-
+  CRating* m_rating;
+  CScroll* m_scroll[MAX_MIDI_CHANNELS];
+  int m_activeScroll;
+  GLuint m_scoreDisplayListId;
+  GLuint m_stavesDisplayListId;
 };
 
 #endif // _SCORE_H_

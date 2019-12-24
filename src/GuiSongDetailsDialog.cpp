@@ -26,72 +26,91 @@
 
 #include <QtWidgets>
 
-#include "GuiSongDetailsDialog.h"
 #include "GlView.h"
+#include "GuiSongDetailsDialog.h"
 
-GuiSongDetailsDialog::GuiSongDetailsDialog(QWidget *parent)
-    : QDialog(parent)
+GuiSongDetailsDialog::GuiSongDetailsDialog(QWidget* parent)
+  : QDialog(parent)
 {
-    setupUi(this);
-    m_song = 0;
-    m_settings = 0;
-    m_trackList = 0;
-    setWindowTitle(tr("Song Details"));
+  setupUi(this);
+  m_song = 0;
+  m_settings = 0;
+  m_trackList = 0;
+  setWindowTitle(tr("Song Details"));
 }
 
-
-void GuiSongDetailsDialog::init(CSong* song, CSettings* settings)
+void
+GuiSongDetailsDialog::init(CSong* song, CSettings* settings)
 {
-    m_song = song;
-    m_settings = settings;
-    m_trackList = m_song->getTrackList();
-    leftHandChannelCombo->addItem(tr("No channel assigned"));
-    leftHandChannelCombo->addItems(m_trackList->getAllChannelProgramNames(true));
-    rightHandChannelCombo->addItem(tr("No channel assigned"));
-    rightHandChannelCombo->addItems(m_trackList->getAllChannelProgramNames(true));
+  m_song = song;
+  m_settings = settings;
+  m_trackList = m_song->getTrackList();
+  leftHandChannelCombo->addItem(tr("No channel assigned"));
+  leftHandChannelCombo->addItems(m_trackList->getAllChannelProgramNames(true));
+  rightHandChannelCombo->addItem(tr("No channel assigned"));
+  rightHandChannelCombo->addItems(m_trackList->getAllChannelProgramNames(true));
 
-    leftHandChannelCombo->setCurrentIndex(m_trackList->getHandTrackIndex(PB_PART_left) + 1);
-    rightHandChannelCombo->setCurrentIndex(m_trackList->getHandTrackIndex(PB_PART_right) +1);
-    updateSongInfoText();
-
+  leftHandChannelCombo->setCurrentIndex(
+    m_trackList->getHandTrackIndex(PB_PART_left) + 1);
+  rightHandChannelCombo->setCurrentIndex(
+    m_trackList->getHandTrackIndex(PB_PART_right) + 1);
+  updateSongInfoText();
 }
 
-
-void GuiSongDetailsDialog::updateSongInfoText()
+void
+GuiSongDetailsDialog::updateSongInfoText()
 {
-    QString str;
-    songInfoText->clear();
-    bool activateOkButton = false;
+  QString str;
+  songInfoText->clear();
+  bool activateOkButton = false;
 
-    if (leftHandChannelCombo->currentIndex() != 0 && leftHandChannelCombo->currentIndex() == rightHandChannelCombo->currentIndex())
-        songInfoText->append("<span style=\"color:red\">" + tr("The left and right hand channels must be different") + "</span>");
-    else if ((leftHandChannelCombo->currentIndex() == 0 && rightHandChannelCombo->currentIndex() != 0 ) ||
-             (rightHandChannelCombo->currentIndex() == 0 && leftHandChannelCombo->currentIndex() != 0 ) )
-        songInfoText->append("<span style=\"color:red\">" + tr("Both left and right hand channels must be none to disable this feature") + "</span>");
-    else
-    {
-        songInfoText->append("<span style=\"color:gray\">" + tr("Set the MIDI Channels to be used for left and right hand piano parts:") + "</span>");
-        songInfoText->append("<span style=\"color:black\">" + tr("the left  hand piano part is using MIDI Channels 1") + "</span>");
-        songInfoText->append("<span style=\"color:black\">" + tr("the right hand piano part is using MIDI Channels 1") + "</span>");
-        activateOkButton = true;
-    }
+  if (leftHandChannelCombo->currentIndex() != 0 &&
+      leftHandChannelCombo->currentIndex() ==
+        rightHandChannelCombo->currentIndex())
+    songInfoText->append(
+      "<span style=\"color:red\">" +
+      tr("The left and right hand channels must be different") + "</span>");
+  else if ((leftHandChannelCombo->currentIndex() == 0 &&
+            rightHandChannelCombo->currentIndex() != 0) ||
+           (rightHandChannelCombo->currentIndex() == 0 &&
+            leftHandChannelCombo->currentIndex() != 0))
+    songInfoText->append("<span style=\"color:red\">" +
+                         tr("Both left and right hand channels must be none to "
+                            "disable this feature") +
+                         "</span>");
+  else {
+    songInfoText->append("<span style=\"color:gray\">" +
+                         tr("Set the MIDI Channels to be used for left and "
+                            "right hand piano parts:") +
+                         "</span>");
+    songInfoText->append(
+      "<span style=\"color:black\">" +
+      tr("the left  hand piano part is using MIDI Channels 1") + "</span>");
+    songInfoText->append(
+      "<span style=\"color:black\">" +
+      tr("the right hand piano part is using MIDI Channels 1") + "</span>");
+    activateOkButton = true;
+  }
 
-    buttonBox->button(QDialogButtonBox::Ok)->setEnabled(activateOkButton);
+  buttonBox->button(QDialogButtonBox::Ok)->setEnabled(activateOkButton);
 }
 
-
-void GuiSongDetailsDialog::on_leftHandChannelCombo_activated (int index)
+void
+GuiSongDetailsDialog::on_leftHandChannelCombo_activated(int index)
 {
-    updateSongInfoText();
+  updateSongInfoText();
 }
 
-void GuiSongDetailsDialog::on_rightHandChannelCombo_activated (int index)
+void
+GuiSongDetailsDialog::on_rightHandChannelCombo_activated(int index)
 {
-    updateSongInfoText();
+  updateSongInfoText();
 }
 
-void GuiSongDetailsDialog::accept()
+void
+GuiSongDetailsDialog::accept()
 {
-    m_trackList->setActiveHandsIndex(leftHandChannelCombo->currentIndex() -1, rightHandChannelCombo->currentIndex() -1);
-    this->QDialog::accept();
+  m_trackList->setActiveHandsIndex(leftHandChannelCombo->currentIndex() - 1,
+                                   rightHandChannelCombo->currentIndex() - 1);
+  this->QDialog::accept();
 }

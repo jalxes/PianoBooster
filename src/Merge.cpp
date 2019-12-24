@@ -28,84 +28,75 @@
 
 #include "Merge.h"
 
-
-
-
-void  CMerge::initMergedEvents()
+void
+CMerge::initMergedEvents()
 {
-    int i;
-    for( i = 0; i < m_mergeEvents.size(); i++)
-    {
-        m_mergeEvents[i].clear();
-        if (checkMidiEventFromStream(i) )
-            m_mergeEvents[i] = fetchMidiEventFromStream(i);
-    }
+  int i;
+  for (i = 0; i < m_mergeEvents.size(); i++) {
+    m_mergeEvents[i].clear();
+    if (checkMidiEventFromStream(i))
+      m_mergeEvents[i] = fetchMidiEventFromStream(i);
+  }
 }
 
-
-int CMerge::nextMergedEvent()
+int
+CMerge::nextMergedEvent()
 {
-    int nearestIndex = 0;
-	
-    int i;
-    CMidiEvent* nearestEvent;
-    int deltaTime;
+  int nearestIndex = 0;
 
-	nearestEvent = 0;
-    // find the first active slot
-    for( i = 0; i < m_mergeEvents.size(); i++)
-    {
-        if (m_mergeEvents[i].type() != MIDI_NONE)
-        {
-            nearestEvent = &m_mergeEvents[i];
-            nearestIndex = i;
-            break;
-        }
+  int i;
+  CMidiEvent* nearestEvent;
+  int deltaTime;
+
+  nearestEvent = 0;
+  // find the first active slot
+  for (i = 0; i < m_mergeEvents.size(); i++) {
+    if (m_mergeEvents[i].type() != MIDI_NONE) {
+      nearestEvent = &m_mergeEvents[i];
+      nearestIndex = i;
+      break;
     }
-    if (nearestEvent == 0)
-        return 0;
+  }
+  if (nearestEvent == 0)
+    return 0;
 
-    // now search the remaining active slots
-    for( i = nearestIndex + 1; i < m_mergeEvents.size(); i++)
-    {
-        if (m_mergeEvents[i].type() != MIDI_NONE)
-        {
-            // find the slot with the lowest delta time
-            if (m_mergeEvents[i].deltaTime() < nearestEvent->deltaTime())
-            {
-                nearestEvent = &m_mergeEvents[i];
-                nearestIndex = i;
-            }
-        }
+  // now search the remaining active slots
+  for (i = nearestIndex + 1; i < m_mergeEvents.size(); i++) {
+    if (m_mergeEvents[i].type() != MIDI_NONE) {
+      // find the slot with the lowest delta time
+      if (m_mergeEvents[i].deltaTime() < nearestEvent->deltaTime()) {
+        nearestEvent = &m_mergeEvents[i];
+        nearestIndex = i;
+      }
     }
+  }
 
-    deltaTime =  -nearestEvent->deltaTime();
+  deltaTime = -nearestEvent->deltaTime();
 
-    // Now subtract the delta time from all the others
-    for( i = 0; i < m_mergeEvents.size(); i++)
-    {
-        if (i == nearestIndex)
-            continue;
-        if (m_mergeEvents[i].type() != MIDI_NONE)
-            m_mergeEvents[i].addDeltaTime( deltaTime );
-    }
-  
-    return nearestIndex;
+  // Now subtract the delta time from all the others
+  for (i = 0; i < m_mergeEvents.size(); i++) {
+    if (i == nearestIndex)
+      continue;
+    if (m_mergeEvents[i].type() != MIDI_NONE)
+      m_mergeEvents[i].addDeltaTime(deltaTime);
+  }
+
+  return nearestIndex;
 }
 
-
-CMidiEvent CMerge::readMidiEvent()
+CMidiEvent
+CMerge::readMidiEvent()
 {
-    int mergeIdx;
-    CMidiEvent event;
+  int mergeIdx;
+  CMidiEvent event;
 
-    mergeIdx = nextMergedEvent();
-    event = m_mergeEvents[mergeIdx];
+  mergeIdx = nextMergedEvent();
+  event = m_mergeEvents[mergeIdx];
 
-    m_mergeEvents[mergeIdx].clear();
-	if (checkMidiEventFromStream(mergeIdx) )
-		m_mergeEvents[mergeIdx] = fetchMidiEventFromStream(mergeIdx);
-    if (event.type() == MIDI_NONE)
-        event.setType(MIDI_PB_EOF);
-    return event;
+  m_mergeEvents[mergeIdx].clear();
+  if (checkMidiEventFromStream(mergeIdx))
+    m_mergeEvents[mergeIdx] = fetchMidiEventFromStream(mergeIdx);
+  if (event.type() == MIDI_NONE)
+    event.setType(MIDI_PB_EOF);
+  return event;
 }

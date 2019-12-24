@@ -29,16 +29,16 @@
 #ifndef __TRACK_LIST_H__
 #define __TRACK_LIST_H__
 
-#include <QString>
 #include <QList>
 #include <QListWidgetItem>
 #include <QObject>
+#include <QString>
 
-#include "MidiEvent.h"
 #include "Chord.h"
+#include "MidiEvent.h"
 
-#define CONVENTION_LEFT_HAND_CHANNEL (3-1)
-#define CONVENTION_RIGHT_HAND_CHANNEL (4-1)
+#define CONVENTION_LEFT_HAND_CHANNEL (3 - 1)
+#define CONVENTION_RIGHT_HAND_CHANNEL (4 - 1)
 
 class CSong;
 class CSettings;
@@ -46,57 +46,56 @@ class CSettings;
 class CTrackListItem
 {
 public:
-    int midiChannel;
+  int midiChannel;
 };
-
 
 class CTrackList : public QObject
 {
-Q_OBJECT
+  Q_OBJECT
 public:
-    CTrackList()
-    {
-        m_song = 0;
-        m_settings = 0;
-        clear();
-    }
+  CTrackList()
+  {
+    m_song = 0;
+    m_settings = 0;
+    clear();
+  }
 
-    void init(CSong* songObj, CSettings* settings);
+  void init(CSong* songObj, CSettings* settings);
 
-    void refresh();
-    void clear();
+  void refresh();
+  void clear();
 
-    // Find an unused channel
-    int findFreeChannel(int startChannel);
+  // Find an unused channel
+  int findFreeChannel(int startChannel);
 
+  void currentRowChanged(int currentRow);
+  void examineMidiEvent(CMidiEvent event);
+  bool pianoPartConvetionTest();
+  int guessKeySignature(int chanA, int chanB);
 
-    void currentRowChanged(int currentRow);
-    void examineMidiEvent(CMidiEvent event);
-    bool pianoPartConvetionTest();
-    int guessKeySignature(int chanA, int chanB);
+  // The programme name now starts at 1 with 0 = "(none)"
+  static QString getProgramName(int program);
+  QStringList getAllChannelProgramNames(bool raw = false);
+  int getActiveItemIndex();
+  int getActiveHandIndex(whichPart_t whichPart);
 
-    // The programme name now starts at 1 with 0 = "(none)"
-    static QString getProgramName(int program);
-    QStringList getAllChannelProgramNames(bool raw=false);
-    int getActiveItemIndex();
-    int getActiveHandIndex(whichPart_t whichPart);
+  // set the midi channels to use for the left and right hand piano parts
+  void setActiveHandsIndex(int leftIndex, int rightIndex);
 
-    // set the midi channels to use for the left and right hand piano parts
-    void setActiveHandsIndex(int leftIndex, int rightIndex);
+  int getHandTrackIndex(whichPart_t whichPart);
 
-    int getHandTrackIndex(whichPart_t whichPart);
-
-    void changeListWidgetItemView(unsigned int index, QListWidgetItem* listWidgetItem);
+  void changeListWidgetItemView(unsigned int index,
+                                QListWidgetItem* listWidgetItem);
 
 private:
-    QString getChannelProgramName(int chan);
+  QString getChannelProgramName(int chan);
 
-    CSong* m_song;
-    CSettings* m_settings;
-    QList<CTrackListItem> m_trackQtList;
-    bool m_midiActiveChannels[MAX_MIDI_CHANNELS];
-    int m_midiFirstPatchChannels[MAX_MIDI_CHANNELS];
-    int m_noteFrequency[MAX_MIDI_CHANNELS][MAX_MIDI_NOTES];
+  CSong* m_song;
+  CSettings* m_settings;
+  QList<CTrackListItem> m_trackQtList;
+  bool m_midiActiveChannels[MAX_MIDI_CHANNELS];
+  int m_midiFirstPatchChannels[MAX_MIDI_CHANNELS];
+  int m_noteFrequency[MAX_MIDI_CHANNELS][MAX_MIDI_NOTES];
 };
 
 #endif //__TRACK_LIST_H__

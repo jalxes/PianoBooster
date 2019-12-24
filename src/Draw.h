@@ -29,26 +29,25 @@
 #define __DRAW_H__
 
 #ifdef __APPLE__
-  #include <OpenGL/gl.h>
-  #include <OpenGL/glu.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
 #else
-  #include <GL/gl.h>
-  #include <GL/glu.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #endif
 #ifndef NO_USE_FTGL
 #include <FTGL/ftgl.h>
 #endif
-#include <QObject>
-#include <QFile>
 #include <QApplication>
+#include <QFile>
+#include <QObject>
 
-#define HORIZONTAL_SPACING_FACTOR   (0.75) // defines the speed of the scrolling
+#define HORIZONTAL_SPACING_FACTOR (0.75) // defines the speed of the scrolling
 #define FONT_SIZE 16
 
 #include "StavePosition.h"
 
 #include "Symbol.h"
-
 
 class CSettings;
 class CSlot;
@@ -56,112 +55,128 @@ class CSlot;
 class CScrollProperties
 {
 public:
-    CScrollProperties()
-    {
-        m_horizontal = false;
-    }
-    bool horizontal() { return m_horizontal; }
-private:
-    bool m_horizontal;
+  CScrollProperties() { m_horizontal = false; }
+  bool horizontal() { return m_horizontal; }
 
+private:
+  bool m_horizontal;
 };
 
 class CDraw : public QObject
 {
 public:
-    CDraw(CSettings* settings)
+  CDraw(CSettings* settings)
 #ifndef NO_USE_FTGL
-        :font(nullptr)
+    : font(nullptr)
 #endif
-    {
+  {
 #ifndef NO_USE_FTGL
-        QStringList listPathFonts;
-        #if defined(USE_FONT)
-        listPathFonts.push_back(USE_FONT);
-        #endif        
-        listPathFonts.push_back(QString(PREFIX)+"/"+QString(DATA_DIR)+"/fonts/DejaVuSans.ttf");
-        listPathFonts.push_back(QApplication::applicationDirPath() + "/fonts/DejaVuSans.ttf");
-        listPathFonts.push_back("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
-        listPathFonts.push_back("/usr/share/fonts/dejavu/DejaVuSans.ttf");
-        listPathFonts.push_back("/usr/share/fonts/TTF/dejavu/DejaVuSans.ttf");
-        listPathFonts.push_back("/usr/share/fonts/TTF/DejaVuSans.ttf");
-        listPathFonts.push_back("/usr/share/fonts/truetype/DejaVuSans.ttf");
-        listPathFonts.push_back("/usr/local/share/fonts/dejavu/DejaVuSans.ttf");
-
-        for (int i=0;i<listPathFonts.size();i++){
-            QFile file(listPathFonts.at(i));
-            if (file.exists()){
-                font = new FTGLPixmapFont(listPathFonts.at(i).toStdString().c_str());
-                break;
-            }
-        }
-        if (font==nullptr){
-            ppLogError("Font DejaVuSans.ttf was not found !");
-            exit(0);
-        }
-        font->FaceSize(FONT_SIZE, FONT_SIZE);
+    QStringList listPathFonts;
+#if defined(USE_FONT)
+    listPathFonts.push_back(USE_FONT);
 #endif
-        m_settings = settings;
-        m_displayHand = PB_PART_both;
-        m_forceCompileRedraw = 1;
-        m_scrollProperties = &m_scrollPropertiesHorizontal;
-    }
+    listPathFonts.push_back(QString(PREFIX) + "/" + QString(DATA_DIR) +
+                            "/fonts/DejaVuSans.ttf");
+    listPathFonts.push_back(QApplication::applicationDirPath() +
+                            "/fonts/DejaVuSans.ttf");
+    listPathFonts.push_back("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
+    listPathFonts.push_back("/usr/share/fonts/dejavu/DejaVuSans.ttf");
+    listPathFonts.push_back("/usr/share/fonts/TTF/dejavu/DejaVuSans.ttf");
+    listPathFonts.push_back("/usr/share/fonts/TTF/DejaVuSans.ttf");
+    listPathFonts.push_back("/usr/share/fonts/truetype/DejaVuSans.ttf");
+    listPathFonts.push_back("/usr/local/share/fonts/dejavu/DejaVuSans.ttf");
 
-    ~CDraw(){
+    for (int i = 0; i < listPathFonts.size(); i++) {
+      QFile file(listPathFonts.at(i));
+      if (file.exists()) {
+        font = new FTGLPixmapFont(listPathFonts.at(i).toStdString().c_str());
+        break;
+      }
+    }
+    if (font == nullptr) {
+      ppLogError("Font DejaVuSans.ttf was not found !");
+      exit(0);
+    }
+    font->FaceSize(FONT_SIZE, FONT_SIZE);
+#endif
+    m_settings = settings;
+    m_displayHand = PB_PART_both;
+    m_forceCompileRedraw = 1;
+    m_scrollProperties = &m_scrollPropertiesHorizontal;
+  }
+
+  ~CDraw()
+  {
 #ifndef NO_USE_FTGL
-        if (font!=nullptr) delete font;
+    if (font != nullptr)
+      delete font;
 #endif
-    }
+  }
 
-    void scrollVertex(float x, float y)
-    {
-        if (m_scrollProperties->horizontal())
-            glVertex2f (x,y);
-        else
-            glVertex2f (y,x);
-    }
+  void scrollVertex(float x, float y)
+  {
+    if (m_scrollProperties->horizontal())
+      glVertex2f(x, y);
+    else
+      glVertex2f(y, x);
+  }
 
-    void drawSymbol(CSymbol symbol, float x, float y, CSlot* slot = 0);
-    void drawSymbol(CSymbol symbol, float x);
-    void drawSlot(CSlot* slot);
+  void drawSymbol(CSymbol symbol, float x, float y, CSlot* slot = 0);
+  void drawSymbol(CSymbol symbol, float x);
+  void drawSlot(CSlot* slot);
 
-    static void setDisplayHand(whichPart_t hand)
-    {
-        m_displayHand = hand;
-        m_forceCompileRedraw = 1;
-    }
-    static whichPart_t getDisplayHand()    {return m_displayHand;}
-    static void drColor(CColor color) { glColor3f(color.red, color.green, color.blue);}
-    static void forceCompileRedraw(int value = 1) {    m_forceCompileRedraw = value; }
+  static void setDisplayHand(whichPart_t hand)
+  {
+    m_displayHand = hand;
+    m_forceCompileRedraw = 1;
+  }
+  static whichPart_t getDisplayHand() { return m_displayHand; }
+  static void drColor(CColor color)
+  {
+    glColor3f(color.red, color.green, color.blue);
+  }
+  static void forceCompileRedraw(int value = 1)
+  {
+    m_forceCompileRedraw = value;
+  }
 
 protected:
-    static whichPart_t m_displayHand;
-    static int getCompileRedrawCount() {  return m_forceCompileRedraw; }
+  static whichPart_t m_displayHand;
+  static int getCompileRedrawCount() { return m_forceCompileRedraw; }
 
-    void oneLine(float x1, float y1, float x2, float y2);
-    void drawStaves(float startX, float endX);
-    void drawKeySignature(int key);
-    void drawNoteName(int midiNote, float x, float y, int type);
+  void oneLine(float x1, float y1, float x2, float y2);
+  void drawStaves(float startX, float endX);
+  void drawKeySignature(int key);
+  void drawNoteName(int midiNote, float x, float y, int type);
 #ifndef NO_USE_FTGL
-    void renderText(float x, float y, const char* s);
+  void renderText(float x, float y, const char* s);
 #endif
-    CSettings* m_settings;
+  CSettings* m_settings;
 
 private:
-    Q_OBJECT
-    void drawStaveNoteName(CSymbol symbol, float x, float y);
-    bool drawNote(CSymbol* symbol, float x, float y, CSlot* slot, CColor color, bool playable);
+  Q_OBJECT
+  void drawStaveNoteName(CSymbol symbol, float x, float y);
+  bool drawNote(CSymbol* symbol,
+                float x,
+                float y,
+                CSlot* slot,
+                CColor color,
+                bool playable);
 
-    void checkAccidental(CSymbol symbol, float x, float y);
-    void drawStaveExtentsion(CSymbol symbol, float x, int noteWidth, bool playable);
-    static int m_forceCompileRedraw;
-    const static int m_beatMarkerHeight = 10; // The height of the beat markers in the stave positions
+  void checkAccidental(CSymbol symbol, float x, float y);
+  void drawStaveExtentsion(CSymbol symbol,
+                           float x,
+                           int noteWidth,
+                           bool playable);
+  static int m_forceCompileRedraw;
+  const static int m_beatMarkerHeight =
+    10; // The height of the beat markers in the stave positions
 
-    CScrollProperties *m_scrollProperties;
-    CScrollProperties m_scrollPropertiesHorizontal;
-    CScrollProperties m_scrollPropertiesVertical;
+  CScrollProperties* m_scrollProperties;
+  CScrollProperties m_scrollPropertiesHorizontal;
+  CScrollProperties m_scrollPropertiesVertical;
 #ifndef NO_USE_FTGL
-    FTGLPixmapFont *font;
+  FTGLPixmapFont* font;
 #endif
 };
 

@@ -29,51 +29,47 @@
 #ifndef __RATING_H__
 #define __RATING_H__
 
-#include "Util.h"
 #include "Cfg.h"
+#include "Util.h"
 
 class CRating
 {
 public:
-    CRating()
-    {
-        reset();
-    }
+  CRating() { reset(); }
 
-    void reset();
-    void totalNotes(int count) { m_totalNotesCount += count;}
-    void wrongNotes(int count) { m_wrongNoteCount += count;}
-    void lateNotes(int count) { m_lateNoteCount += count;}
-    int totalNoteCount() {return m_totalNotesCount;}
-    int wrongNoteCount() {return m_wrongNoteCount;}
-    int lateNoteCount() {return m_lateNoteCount;}
+  void reset();
+  void totalNotes(int count) { m_totalNotesCount += count; }
+  void wrongNotes(int count) { m_wrongNoteCount += count; }
+  void lateNotes(int count) { m_lateNoteCount += count; }
+  int totalNoteCount() { return m_totalNotesCount; }
+  int wrongNoteCount() { return m_wrongNoteCount; }
+  int lateNoteCount() { return m_lateNoteCount; }
 
-    double rating()
-    {
-        double percent = 100;
-        if (m_totalNotesCount > 0)
-            percent = ((m_totalNotesCount - m_lateNoteCount) * 100.0) /m_totalNotesCount;
-        return percent;
-    }
+  double rating()
+  {
+    double percent = 100;
+    if (m_totalNotesCount > 0)
+      percent =
+        ((m_totalNotesCount - m_lateNoteCount) * 100.0) / m_totalNotesCount;
+    return percent;
+  }
 
-    void calculateAccuracy();
+  void calculateAccuracy();
 
-    float getAccuracyValue(){ return m_currentAccuracy; }
-    CColor getAccuracyColor() { return m_currentColor; }
-    bool isAccuracyGood() { return m_goodAccuracyFlag; }
+  float getAccuracyValue() { return m_currentAccuracy; }
+  CColor getAccuracyColor() { return m_currentColor; }
+  bool isAccuracyGood() { return m_goodAccuracyFlag; }
 
 private:
-    int m_totalNotesCount;
-    int m_previousNoteCount;
-    int m_lateNoteCount;
-    int m_previousLateNoteCount;
-    int m_wrongNoteCount;
-    float m_currentAccuracy;
-    float m_factor;
-    CColor m_currentColor;
-    bool m_goodAccuracyFlag;
-
+  int m_totalNotesCount;
+  int m_previousNoteCount;
+  int m_lateNoteCount;
+  int m_previousLateNoteCount;
+  int m_wrongNoteCount;
+  float m_currentAccuracy;
+  float m_factor;
+  CColor m_currentColor;
+  bool m_goodAccuracyFlag;
 };
-
 
 #endif //__RATING_H__

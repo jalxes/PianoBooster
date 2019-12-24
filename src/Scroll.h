@@ -29,92 +29,96 @@
 #ifndef __SCROLL_H__
 #define __SCROLL_H__
 
-
 #include "Draw.h"
-#include "Song.h"
 #include "Queue.h"
+#include "Song.h"
 
-#define QUEUE_LENGTH    1000
+#define QUEUE_LENGTH 1000
 
 class CSettings;
 
 class CScroll : public CDraw
 {
 public:
-    CScroll(int id, CSettings* settings) : CDraw(settings)
-    {
-        m_id = id;
-        m_symbolID = 0;
+  CScroll(int id, CSettings* settings)
+    : CDraw(settings)
+  {
+    m_id = id;
+    m_symbolID = 0;
 
-        m_notation = new CNotation();
-        m_scrollQueue = new CQueue<CSlotDisplayList>(QUEUE_LENGTH);
-        reset();
-        m_show = false;
-        m_noteSpacingFactor = 1.0;
-        m_ppqnFactor = 1.0;
-        m_transpose = 0;
-    }
+    m_notation = new CNotation();
+    m_scrollQueue = new CQueue<CSlotDisplayList>(QUEUE_LENGTH);
+    reset();
+    m_show = false;
+    m_noteSpacingFactor = 1.0;
+    m_ppqnFactor = 1.0;
+    m_transpose = 0;
+  }
 
-    ~CScroll()
-    {
-        delete m_scrollQueue;
-        delete m_notation;
-    }
-    void reset();
-    void scrollDeltaTime(int ticks);
-    void transpose(int transpose);
-    void refresh();
-    void setPlayedNoteColor(int note, CColor color, int wantedDelta, int pianistTimming);
-    void setChannel(int chan)
-    {
-        m_notation->setChannel( chan );
-    }
+  ~CScroll()
+  {
+    delete m_scrollQueue;
+    delete m_notation;
+  }
+  void reset();
+  void scrollDeltaTime(int ticks);
+  void transpose(int transpose);
+  void refresh();
+  void setPlayedNoteColor(int note,
+                          CColor color,
+                          int wantedDelta,
+                          int pianistTimming);
+  void setChannel(int chan) { m_notation->setChannel(chan); }
 
-    //! add a midi event to be analysed and displayed on the score
-    void midiEventInsert(CMidiEvent event) { m_notation->midiEventInsert(event);}
+  //! add a midi event to be analysed and displayed on the score
+  void midiEventInsert(CMidiEvent event) { m_notation->midiEventInsert(event); }
 
-    //! first check if there is space to add a midi event
-    int midiEventSpace() { return m_notation->midiEventSpace(); }
+  //! first check if there is space to add a midi event
+  int midiEventSpace() { return m_notation->midiEventSpace(); }
 
-    void drawScrollingSymbols(bool show);
-    void showScroll(bool show);
-    bool getKeyboardInfo(int *notes);
+  void drawScrollingSymbols(bool show);
+  void showScroll(bool show);
+  bool getKeyboardInfo(int* notes);
 
 private:
-    class CSlotDisplayList : public CSlot
-    {
-        public:
-        CSlotDisplayList(): m_displayListId(0){};
-        CSlotDisplayList(const CSlot &slot, GLuint displayListId, GLuint nextDisplayListId);
+  class CSlotDisplayList : public CSlot
+  {
+  public:
+    CSlotDisplayList()
+      : m_displayListId(0){};
+    CSlotDisplayList(const CSlot& slot,
+                     GLuint displayListId,
+                     GLuint nextDisplayListId);
 
-        GLuint m_displayListId; // the open GL display list id for this slot
-        GLuint m_nextDisplayListId; // and this points to the next one
-    };
+    GLuint m_displayListId;     // the open GL display list id for this slot
+    GLuint m_nextDisplayListId; // and this points to the next one
+  };
 
-    void compileSlot(CSlotDisplayList info);
-    bool validPianistChord(int index);
-    bool insertSlots();
-    void removeSlots();
-    void removeEarlyTimingMakers();
-    int findWantedChord(int note, CColor color, int wantedDelta);
+  void compileSlot(CSlotDisplayList info);
+  bool validPianistChord(int index);
+  bool insertSlots();
+  void removeSlots();
+  void removeEarlyTimingMakers();
+  int findWantedChord(int note, CColor color, int wantedDelta);
 
-    int m_id;      // There are lots of these class running but each class has a unique id
-    CNotation *m_notation;
-    int m_deltaHead;
-    int m_deltaTail;
+  int m_id; // There are lots of these class running but each class has a unique
+            // id
+  CNotation* m_notation;
+  int m_deltaHead;
+  int m_deltaTail;
 
-    GLuint m_symbolID; // the next Display List name (or ID) to use
-    CSlot m_headSlot;   // The next slot to be put in at the head of the queue;
+  GLuint m_symbolID; // the next Display List name (or ID) to use
+  CSlot m_headSlot;  // The next slot to be put in at the head of the queue;
 
-    int m_transpose;
-    int m_wantedIndex;  // The index number of the wanted call in the scrollQueue
-    int m_wantedDelta; // The running delta time of the wanted chord
+  int m_transpose;
+  int m_wantedIndex; // The index number of the wanted call in the scrollQueue
+  int m_wantedDelta; // The running delta time of the wanted chord
 
-    CQueue<CSlotDisplayList>* m_scrollQueue;  // The current active display list of notes/chords on the screen
-    bool m_show; // set to true to show on the screen
-    float m_noteSpacingFactor;
-    float m_ppqnFactor; // if PulsesPerQuarterNote is 96 then the factor is 1.0
+  CQueue<CSlotDisplayList>* m_scrollQueue; // The current active display list of
+                                           // notes/chords on the screen
+  bool m_show;                             // set to true to show on the screen
+  float m_noteSpacingFactor;
+  float m_ppqnFactor; // if PulsesPerQuarterNote is 96 then the factor is 1.0
 };
-
 
 #endif //__SCROLL_H__

@@ -20,51 +20,54 @@
 ****************************************************************************/
 
 #ifdef __APPLE__
-  #include <OpenGL/gl.h>
-  #include <OpenGL/glu.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
 #else
-  #include <GL/gl.h>
-  #include <GL/glu.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
 #endif
 
-#include <QApplication>
-#include <QtOpenGL>
 #include "QtWindow.h"
 #include "version.txt"
+#include <QApplication>
+#include <QtOpenGL>
 
-int main(int argc, char *argv[]){
-    QCoreApplication::setOrganizationName("PianoBooster");
-    QCoreApplication::setOrganizationDomain("https://github.com/captnfab/PianoBooster");
-    QCoreApplication::setApplicationName("Piano Booster");
-    QCoreApplication::setApplicationVersion(PB_VERSION);
+int
+main(int argc, char* argv[])
+{
+  QCoreApplication::setOrganizationName("PianoBooster");
+  QCoreApplication::setOrganizationDomain(
+    "https://github.com/captnfab/PianoBooster");
+  QCoreApplication::setApplicationName("Piano Booster");
+  QCoreApplication::setApplicationVersion(PB_VERSION);
 
-    {
-        QCoreApplication app(argc, argv);
-        QStringList argList = QCoreApplication::arguments();
-        for (QString arg:argList){
-            if (arg=="--version"){
-                fprintf(stdout, "pianobooster " PB_VERSION "\n");
-                exit(0);
-            }
-        }
+  {
+    QCoreApplication app(argc, argv);
+    QStringList argList = QCoreApplication::arguments();
+    for (QString arg : argList) {
+      if (arg == "--version") {
+        fprintf(stdout, "pianobooster " PB_VERSION "\n");
+        exit(0);
+      }
     }
+  }
 
-    QApplication app(argc, argv);
+  QApplication app(argc, argv);
 
-    if (!QGLFormat::hasOpenGL()) {
-        QMessageBox::information(0, QMessageBox::tr("OpenGL support"),
-                 QMessageBox::tr("This system does not support OpenGL which is needed to run Piano Booster."));
-        return -1;
-    }
+  if (!QGLFormat::hasOpenGL()) {
+    QMessageBox::information(
+      0,
+      QMessageBox::tr("OpenGL support"),
+      QMessageBox::tr("This system does not support OpenGL which is needed to "
+                      "run Piano Booster."));
+    return -1;
+  }
 
+  QtWindow window;
 
+  window.show();
 
-    QtWindow window;
-
-    window.show();
-
-    int value = app.exec();
-    closeLogs();
-    return value;
+  int value = app.exec();
+  closeLogs();
+  return value;
 }
-

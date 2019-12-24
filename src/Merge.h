@@ -29,30 +29,27 @@
 #ifndef __MERGE_H__
 #define __MERGE_H__
 
-#include <QVector>
 #include "MidiEvent.h"
+#include <QVector>
 
 // Reads data from a standard MIDI file
 class CMerge
 {
 public:
-    CMerge()
-    {
-    }
-	CMidiEvent readMidiEvent();
-	    //you should always have a virtual destructor when using virtual functions
-    virtual ~CMerge() {};
+  CMerge() {}
+  CMidiEvent readMidiEvent();
+  // you should always have a virtual destructor when using virtual functions
+  virtual ~CMerge(){};
 
 protected:
-	void setSize(int size) {m_mergeEvents.resize(size);}
-    void initMergedEvents();
-    int nextMergedEvent();
-	virtual bool checkMidiEventFromStream(int streamIdx) = 0;
-	virtual CMidiEvent fetchMidiEventFromStream(int streamIdx)  = 0;
+  void setSize(int size) { m_mergeEvents.resize(size); }
+  void initMergedEvents();
+  int nextMergedEvent();
+  virtual bool checkMidiEventFromStream(int streamIdx) = 0;
+  virtual CMidiEvent fetchMidiEventFromStream(int streamIdx) = 0;
 
 private:
-    QVector<CMidiEvent> m_mergeEvents;
+  QVector<CMidiEvent> m_mergeEvents;
 };
 
 #endif // __MERGE_H__
-

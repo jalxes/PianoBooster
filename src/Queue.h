@@ -35,91 +35,85 @@
 // different threads could be running each end of the queue
 
 //
-template <class TYPE>
+template<class TYPE>
 
 class CQueue
 {
 public:
-    explicit CQueue(int size)
-    {
-        m_size = size;
-        m_buffer = new TYPE[size];
-        clear();
+  explicit CQueue(int size)
+  {
+    m_size = size;
+    m_buffer = new TYPE[size];
+    clear();
+  }
+
+  ~CQueue() { delete[] m_buffer; }
+
+  void clear() { m_count = m_head = m_tail = 0; }
+
+  // pushes the item into the queue and returns a pointer to the item in the
+  // buffer
+  TYPE* push(TYPE c)
+  {
+    if (!space()) {
+      assert(false);
+      return 0;
     }
+    TYPE* itemPtr = &m_buffer[m_head];
+    m_buffer[m_head] = c;
+    m_head++;
+    if (m_head >= m_size)
+      m_head = 0;
 
-    ~CQueue()
-    {
-        delete [] m_buffer;
+    // This must be last if a different thread is using pop()
+    m_count++;
+    return itemPtr;
+  }
+
+  TYPE pop()
+  {
+    TYPE c;
+    if (!length()) {
+      assert(false);
+      return m_buffer[m_tail];
     }
+    c = m_buffer[m_tail++];
+    if (m_tail >= m_size)
+      m_tail = 0;
 
-    void clear()
-    {
-        m_count = m_head = m_tail=0;
+    // This must be last if a different thread is using push()
+    m_count--;
+    return c;
+  }
+
+  // returns a pointer to the item starting at the end of the queue
+  TYPE* indexPtr(int index)
+  {
+    int offset;
+    if (index >= length()) {
+      assert(false);
+      return &m_buffer[m_head];
     }
+    offset = m_tail + index;
+    if (offset >= m_size)
+      offset -= m_size;
+    return &m_buffer[offset];
+  }
 
-    // pushes the item into the queue and returns a pointer to the item in the buffer
-    TYPE* push(TYPE c)
-    {
-        if (!space())
-        {
-            assert(false);
-            return 0;
-        }
-        TYPE* itemPtr = &m_buffer[m_head];
-        m_buffer[m_head] = c;
-        m_head++;
-        if (m_head >= m_size)
-            m_head = 0;
+  TYPE index(int index) { return *indexPtr(index); }
 
-        // This must be last if a different thread is using pop()
-        m_count++;
-        return itemPtr;
-    }
+  int length() { return m_count; }
+  int space() { return m_size - m_count; }
 
-    TYPE pop()
-    {
-        TYPE c;
-        if (!length())
-        {
-            assert(false);
-            return m_buffer[m_tail];
-        }
-        c = m_buffer[m_tail++];
-        if (m_tail >= m_size)
-            m_tail = 0;
-
-        // This must be last if a different thread is using push()
-        m_count--;
-        return c;
-    }
-
-    // returns a pointer to the item starting at the end of the queue
-    TYPE * indexPtr(int index)
-    {
-        int offset;
-        if (index >= length())
-        {
-            assert(false);
-            return &m_buffer[m_head];
-        }
-        offset = m_tail + index;
-        if (offset >= m_size)
-            offset -= m_size;
-        return &m_buffer[offset];
-    }
-
-    TYPE index(int index){ return *indexPtr(index);}
-
-    int length() {return m_count;}
-    int space() {return m_size - m_count;}
 private:
-    TYPE * m_buffer;
-    int m_size;
-    int m_head;
-    int m_tail;
+  TYPE* m_buffer;
+  int m_size;
+  int m_head;
+  int m_tail;
 
-    // this should be atomic operation when two different threads are at each end of the queue
-    volatile int m_count;
+  // this should be atomic operation when two different threads are at each end
+  // of the queue
+  volatile int m_count;
 };
 
 #endif //__QUEUE_H__

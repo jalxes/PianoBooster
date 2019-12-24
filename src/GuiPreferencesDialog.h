@@ -29,35 +29,35 @@
 #ifndef __GUIPREFERENCESDIALOG_H__
 #define __GUIPREFERENCESDIALOG_H__
 
-
 #include <QtWidgets>
 
-#include "Song.h"
 #include "Settings.h"
-
+#include "Song.h"
 
 #include "ui_GuiPreferencesDialog.h"
 
 class CGLView;
 
-class GuiPreferencesDialog : public QDialog, private Ui::GuiPreferencesDialog
+class GuiPreferencesDialog
+  : public QDialog
+  , private Ui::GuiPreferencesDialog
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    GuiPreferencesDialog(QWidget *parent = 0);
+  GuiPreferencesDialog(QWidget* parent = 0);
 
-    void init(CSong* song, CSettings* settings, CGLView* glView);
+  void init(CSong* song, CSettings* settings, CGLView* glView);
 
 private slots:
-    void accept();
+  void accept();
 
 private:
-    void initLanguageCombo();
+  void initLanguageCombo();
 
-    CSettings* m_settings;
-    CSong* m_song;
-    CGLView *m_glView;
+  CSettings* m_settings;
+  CSong* m_song;
+  CGLView* m_glView;
 };
 
 #endif //__GUIPREFERENCESDIALOG_H__

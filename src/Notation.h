@@ -31,102 +31,97 @@
 
 #include <assert.h>
 
+#include "Bar.h"
+#include "Chord.h"
 #include "MidiFile.h"
 #include "Queue.h"
 #include "Symbol.h"
-#include "Chord.h"
-#include "Bar.h"
 
-
-#define MAX_SYMBOLS    20  // The maximum number of symbols that can be stored in one slot
+#define MAX_SYMBOLS                                                            \
+  20 // The maximum number of symbols that can be stored in one slot
 
 class CSlot
 {
 public:
-    CSlot()
-    {
-        clear();
+  CSlot() { clear(); }
+  void clear()
+  {
+    m_length = 0;
+    m_deltaTime = 0;
+    m_av8Left = 0;
+    m_av8Right = 0;
+    m_maxLeftEdge = 0;
+  }
+
+  CSymbol getSymbol(int index) { return m_symbols[index]; }
+  CSymbol* getSymbolPtr(int index) { return &m_symbols[index]; }
+  musicalSymbol_t getSymbolType(int index)
+  {
+    return m_symbols[index].getType();
+  }
+  int length() { return m_length; }
+  void setDeltaTime(int delta) { m_deltaTime = delta; }
+  void addDeltaTime(int delta) { m_deltaTime += delta; }
+  int getDeltaTime() { return m_deltaTime; }
+  int getLeftSideDeltaTime() { return m_deltaTime + m_maxLeftEdge; }
+
+  void setAv8Left(int val) { m_av8Left = val; }
+  int getAv8Left() { return m_av8Left; }
+
+  // return false on error
+  bool addSymbol(CSymbol symbol);
+  void analyse();
+
+  void setSymbol(int delta, CSymbol symbol)
+  {
+    clear();
+    setDeltaTime(delta);
+    addSymbol(symbol);
+  }
+
+  void transpose(int amount)
+  {
+    for (int i = 0; i < m_length; i++) {
+      m_symbols[i].transpose(amount);
     }
-    void clear()
-    {
-        m_length = 0;
-        m_deltaTime = 0;
-        m_av8Left = 0;
-        m_av8Right = 0;
-        m_maxLeftEdge = 0;
+  }
+
+  void setNoteColor(int note, CColor color)
+  {
+    for (int i = 0; i < m_length; i++) {
+      if (note == m_symbols[i].getNote() || note == 0)
+        m_symbols[i].setColor(color);
     }
+  }
 
-    CSymbol getSymbol(int index) {return m_symbols[index];}
-    CSymbol* getSymbolPtr(int index) {return &m_symbols[index];}
-    musicalSymbol_t getSymbolType(int index) {return m_symbols[index].getType();}
-    int length() {return m_length;}
-    void setDeltaTime(int delta) {m_deltaTime = delta;}
-    void addDeltaTime(int delta) {m_deltaTime += delta;}
-    int getDeltaTime() {return m_deltaTime;}
-    int getLeftSideDeltaTime() {return m_deltaTime + m_maxLeftEdge;}
-
-    void setAv8Left(int val) {m_av8Left = val;}
-    int getAv8Left() {return m_av8Left;}
-
-    // return false on error
-    bool addSymbol(CSymbol symbol);
-    void analyse();
-
-    void setSymbol(int delta, CSymbol symbol)
-    {
-        clear();
-        setDeltaTime(delta);
-        addSymbol(symbol);
+  void setNoteTimming(int note, int timing)
+  {
+    for (int i = 0; i < m_length; i++) {
+      if (note == m_symbols[i].getNote() || note == 0)
+        m_symbols[i].setPianistTiming(timing);
     }
+    if (timing < m_maxLeftEdge)
+      m_maxLeftEdge = timing;
+  }
 
-
-    void transpose(int amount)
-    {
-        for (int i = 0; i < m_length; i++)
-        {
-            m_symbols[i].transpose(amount);
-        }
+  void clearAllNoteTimmings()
+  {
+    for (int i = 0; i < m_length; i++) {
+      m_symbols[i].setPianistTiming(NOT_USED);
     }
-
-    void setNoteColor(int note, CColor color )
-    {
-        for (int i = 0; i < m_length; i++)
-        {
-            if (note == m_symbols[i].getNote() || note == 0)
-                m_symbols[i].setColor(color);
-        }
-    }
-
-    void setNoteTimming(int note, int timing)
-    {
-        for (int i = 0; i < m_length; i++)
-        {
-            if (note == m_symbols[i].getNote() || note == 0)
-                m_symbols[i].setPianistTiming(timing);
-        }
-        if (timing < m_maxLeftEdge)
-            m_maxLeftEdge = timing;
-    }
-
-    void clearAllNoteTimmings()
-    {
-        for (int i = 0; i < m_length; i++)
-        {
-            m_symbols[i].setPianistTiming(NOT_USED);
-        }
-        m_maxLeftEdge = 0;
-    }
+    m_maxLeftEdge = 0;
+  }
 
 protected:
-
 private:
-    int m_deltaTime;
+  int m_deltaTime;
 
-    CSymbol m_symbols[MAX_SYMBOLS];
-    int m_length;
-    int m_av8Left;
-    int m_av8Right;
-    int m_maxLeftEdge; // the furthest the note will appear on the left hand edge (used when removing the note)
+  CSymbol m_symbols[MAX_SYMBOLS];
+  int m_length;
+  int m_av8Left;
+  int m_av8Right;
+  int m_maxLeftEdge; // the furthest the note will appear on the left hand edge
+                     // (used when removing the note)
 };
 
 // remembers the state of a running accidental
@@ -134,99 +129,102 @@ private:
 class CNoteState
 {
 public:
-    CNoteState()
-    {
-        clear();
-    }
-    void clear()
-    {
-        m_barChangeCounter = -1;
-        m_accidentalState = PB_ACCIDENTAL_MODIFER_noChange;
-        m_noteLength = 0;
-        m_backLink = 0;
-    }
-    void setBarChange(int value){m_barChangeCounter = value;}
-    int getBarChange(){return m_barChangeCounter;}
-    void setAccidentalState(accidentalModifer_t value){m_accidentalState = value;}
-    accidentalModifer_t getAccidentalState(){return m_accidentalState;}
-    void setBackLink(CNoteState * link){m_backLink = link;}
-    CNoteState * getBackLink(){return m_backLink;}
-
+  CNoteState() { clear(); }
+  void clear()
+  {
+    m_barChangeCounter = -1;
+    m_accidentalState = PB_ACCIDENTAL_MODIFER_noChange;
+    m_noteLength = 0;
+    m_backLink = 0;
+  }
+  void setBarChange(int value) { m_barChangeCounter = value; }
+  int getBarChange() { return m_barChangeCounter; }
+  void setAccidentalState(accidentalModifer_t value)
+  {
+    m_accidentalState = value;
+  }
+  accidentalModifer_t getAccidentalState() { return m_accidentalState; }
+  void setBackLink(CNoteState* link) { m_backLink = link; }
+  CNoteState* getBackLink() { return m_backLink; }
 
 private:
-    int m_barChangeCounter;
-    accidentalModifer_t m_accidentalState;
-    int m_noteLength; // Used to determine the note length
-    CNoteState* m_backLink;
+  int m_barChangeCounter;
+  accidentalModifer_t m_accidentalState;
+  int m_noteLength; // Used to determine the note length
+  CNoteState* m_backLink;
 };
 
-enum {
-    NOTATE_demisemiquaverBoundary,       // Demisemiquaver / Thirty-second note
-    NOTATE_semiquaverBoundary,           // Semiquaver / Sixteenth note
-    NOTATE_quaverBoundary,               // Quaver / Eighth note
-    NOTATE_crotchetBoundary,             // Crotchet / Quarter note
-    NOTATE_minimBoundary,                // Minim / Half note
-    NOTATE_semibreveBoundary,            // Semibreve / Whole note
-    NOTATE_breveBoundary,                // Breve / Double whole note
-    NOTATE_MAX_PARAMS                   // == MUST BE LAST ===
+enum
+{
+  NOTATE_demisemiquaverBoundary, // Demisemiquaver / Thirty-second note
+  NOTATE_semiquaverBoundary,     // Semiquaver / Sixteenth note
+  NOTATE_quaverBoundary,         // Quaver / Eighth note
+  NOTATE_crotchetBoundary,       // Crotchet / Quarter note
+  NOTATE_minimBoundary,          // Minim / Half note
+  NOTATE_semibreveBoundary,      // Semibreve / Whole note
+  NOTATE_breveBoundary,          // Breve / Double whole note
+  NOTATE_MAX_PARAMS              // == MUST BE LAST ===
 };
 
 // Define a chord
 class CNotation
 {
 public:
-    CNotation()
-    {
-        m_midiInputQueue = new CQueue<CMidiEvent>(1000);
-        m_slotQueue = new CQueue<CSlot>(200);
-        reset();
-        m_displayChannel = 0;
-    }
-    ~CNotation()
-    {
-        delete m_midiInputQueue;
-        delete m_slotQueue;
-    }
-    void reset();
+  CNotation()
+  {
+    m_midiInputQueue = new CQueue<CMidiEvent>(1000);
+    m_slotQueue = new CQueue<CSlot>(200);
+    reset();
+    m_displayChannel = 0;
+  }
+  ~CNotation()
+  {
+    delete m_midiInputQueue;
+    delete m_slotQueue;
+  }
+  void reset();
 
-    void setChannel(int channel) {m_displayChannel = channel;}
+  void setChannel(int channel) { m_displayChannel = channel; }
 
+  CSlot nextSlot();
+  void midiEventInsert(CMidiEvent event);
 
-    CSlot nextSlot();
-    void midiEventInsert(CMidiEvent event);
+  int midiEventSpace() { return m_midiInputQueue->space(); }
 
-    int midiEventSpace() { return m_midiInputQueue->space();}
-
-    static void setCourtesyAccidentals(bool setting){m_cfg_displayCourtesyAccidentals = setting;}
-    static bool displayCourtesyAccidentals(){return m_cfg_displayCourtesyAccidentals; }
-
+  static void setCourtesyAccidentals(bool setting)
+  {
+    m_cfg_displayCourtesyAccidentals = setting;
+  }
+  static bool displayCourtesyAccidentals()
+  {
+    return m_cfg_displayCourtesyAccidentals;
+  }
 
 private:
-    CSlot nextBeatMarker();
-    int nextMergeSlot();
-    void findNoteSlots();
-    CSlot nextNoteSlot();
-    accidentalModifer_t detectSuppressedNatural(int note);
-    void setupNotationParamaters();
+  CSlot nextBeatMarker();
+  int nextMergeSlot();
+  void findNoteSlots();
+  CSlot nextNoteSlot();
+  accidentalModifer_t detectSuppressedNatural(int note);
+  void setupNotationParamaters();
 
-    void calculateScoreNoteLength();
+  void calculateScoreNoteLength();
 
-
-    CQueue<CSlot>* m_slotQueue;             // Queue of symbol slots that have not been read yet
-    CQueue<CMidiEvent>* m_midiInputQueue;   // A Queue of midi events
-    CSlot m_currentSlot;
-    int m_currentDeltaTime;        // time difference between this and the previous slot
-    int m_beatPerBarCounter;
-    int m_earlyBarChangeCounter;
-    int m_earlyBarChangeDelta; // Counts the ppqn in one bar
-    CSlot m_mergeSlots[2];
-    int m_displayChannel;
-    CFindChord m_findScrollerChord;
-    CBar m_bar;
-    CNoteState m_noteState[MAX_MIDI_NOTES];
-    static bool m_cfg_displayCourtesyAccidentals;
-    static int cfg_param[NOTATE_MAX_PARAMS];
+  CQueue<CSlot>*
+    m_slotQueue; // Queue of symbol slots that have not been read yet
+  CQueue<CMidiEvent>* m_midiInputQueue; // A Queue of midi events
+  CSlot m_currentSlot;
+  int m_currentDeltaTime; // time difference between this and the previous slot
+  int m_beatPerBarCounter;
+  int m_earlyBarChangeCounter;
+  int m_earlyBarChangeDelta; // Counts the ppqn in one bar
+  CSlot m_mergeSlots[2];
+  int m_displayChannel;
+  CFindChord m_findScrollerChord;
+  CBar m_bar;
+  CNoteState m_noteState[MAX_MIDI_NOTES];
+  static bool m_cfg_displayCourtesyAccidentals;
+  static int cfg_param[NOTATE_MAX_PARAMS];
 };
 
-#endif  // __NOTATION_H__
-
+#endif // __NOTATION_H__

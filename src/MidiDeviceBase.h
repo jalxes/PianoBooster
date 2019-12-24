@@ -30,8 +30,8 @@
 #define __MIDI_DEVICE_BASE_H__
 #include <QStringList>
 
-#include "Util.h"
 #include "Cfg.h"
+#include "Util.h"
 
 /*!
  * @brief   xxxxx.
@@ -39,33 +39,35 @@
 
 #include "MidiEvent.h"
 
-
 class CMidiDeviceBase
 {
 public:
-    virtual void init() = 0;
-    //! add a midi event to be played immediately
-    virtual void playMidiEvent(const CMidiEvent & event) = 0;
-    virtual int checkMidiInput() = 0;
-    virtual CMidiEvent readMidiInput() = 0;
+  virtual void init() = 0;
+  //! add a midi event to be played immediately
+  virtual void playMidiEvent(const CMidiEvent& event) = 0;
+  virtual int checkMidiInput() = 0;
+  virtual CMidiEvent readMidiInput() = 0;
 
-    typedef enum {MIDI_INPUT, MIDI_OUTPUT} midiType_t;
-    virtual QStringList getMidiPortList(midiType_t type) = 0;
+  typedef enum
+  {
+    MIDI_INPUT,
+    MIDI_OUTPUT
+  } midiType_t;
+  virtual QStringList getMidiPortList(midiType_t type) = 0;
 
-    virtual bool openMidiPort(midiType_t type, QString portName) = 0;
-    virtual void closeMidiPort(midiType_t type, int index) = 0;
+  virtual bool openMidiPort(midiType_t type, QString portName) = 0;
+  virtual void closeMidiPort(midiType_t type, int index) = 0;
 
-    // based on the fluid synth settings
-    virtual int     midiSettingsSetStr(QString name, QString str) = 0;
-    virtual int     midiSettingsSetNum(QString name, double val) = 0;
-    virtual int     midiSettingsSetInt(QString name, int val) = 0;
-    virtual QString midiSettingsGetStr(QString name) = 0;
-    virtual double  midiSettingsGetNum(QString name) = 0;
-    virtual int     midiSettingsGetInt(QString name) = 0;
+  // based on the fluid synth settings
+  virtual int midiSettingsSetStr(QString name, QString str) = 0;
+  virtual int midiSettingsSetNum(QString name, double val) = 0;
+  virtual int midiSettingsSetInt(QString name, int val) = 0;
+  virtual QString midiSettingsGetStr(QString name) = 0;
+  virtual double midiSettingsGetNum(QString name) = 0;
+  virtual int midiSettingsGetInt(QString name) = 0;
 
-    //you should always have a virtual destructor when using virtual functions
-    virtual ~CMidiDeviceBase() {};
-
+  // you should always have a virtual destructor when using virtual functions
+  virtual ~CMidiDeviceBase(){};
 
 private:
 };

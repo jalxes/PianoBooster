@@ -30,62 +30,63 @@
 
 #include <QtWidgets>
 
-#include "Song.h"
 #include "Score.h"
-#include "TrackList.h"
 #include "Settings.h"
+#include "Song.h"
+#include "TrackList.h"
 
 #include "ui_GuiTopBar.h"
 
-class GuiTopBar : public QWidget, private Ui::GuiTopBar
+class GuiTopBar
+  : public QWidget
+  , private Ui::GuiTopBar
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    GuiTopBar(QWidget *parent, CSettings* settings);
+  GuiTopBar(QWidget* parent, CSettings* settings);
 
-    void init(CSong* songObj);
+  void init(CSong* songObj);
 
-    void refresh(bool reset);
+  void refresh(bool reset);
 
-    void setPlayButtonState(bool checked, bool atTheEnd = false);
+  void setPlayButtonState(bool checked, bool atTheEnd = false);
 
-    void setSpeed(int value){ speedSpin->setValue(value); }
-    int getSpeed(){return speedSpin->value();}
+  void setSpeed(int value) { speedSpin->setValue(value); }
+  int getSpeed() { return speedSpin->value(); }
 
-    void updateTranslate();
+  void updateTranslate();
 
 public slots:
-    void on_playFromStartButton_clicked(bool clicked);
-    void on_playButton_clicked(bool clicked);
+  void on_playFromStartButton_clicked(bool clicked);
+  void on_playButton_clicked(bool clicked);
 
 private slots:
-    void on_speedSpin_valueChanged(int speed);
-    void on_startBarSpin_valueChanged(double bar);
+  void on_speedSpin_valueChanged(int speed);
+  void on_startBarSpin_valueChanged(double bar);
 
-    void on_transposeSpin_valueChanged(int value);
-    void on_keyCombo_activated(int index);
+  void on_transposeSpin_valueChanged(int value);
+  void on_keyCombo_activated(int index);
 
-    void on_majorCombo_activated(int index)
-    {
-        reloadKeyCombo((index == 0)?true:false);
-    }
+  void on_majorCombo_activated(int index)
+  {
+    reloadKeyCombo((index == 0) ? true : false);
+  }
 
-    void on_saveBarButton_clicked(bool clicked);
-    void on_loopingBarsPopupButton_clicked(bool clicked);
-
+  void on_saveBarButton_clicked(bool clicked);
+  void on_loopingBarsPopupButton_clicked(bool clicked);
 
 private:
-    bool eventFilter(QObject *obj, QEvent *event);
-    void reloadKeyCombo(bool major);
+  bool eventFilter(QObject* obj, QEvent* event);
+  void reloadKeyCombo(bool major);
 
-    CSong* m_song;
-    CSettings* m_settings;
+  CSong* m_song;
+  CSettings* m_settings;
 
-    QMap<QWidget*,QMap<QString,QString>> listWidgetsRetranslateUi;
-    QMap<QAction*,QMap<QString,QString>> listActionsRetranslateUi;
+  QMap<QWidget*, QMap<QString, QString>> listWidgetsRetranslateUi;
+  QMap<QAction*, QMap<QString, QString>> listActionsRetranslateUi;
 
-    bool m_atTheEndOfTheSong;
+  bool m_atTheEndOfTheSong;
 };
 
 #endif //__GUITOPBAR_H__

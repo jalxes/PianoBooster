@@ -34,7 +34,6 @@
  * @brief   xxxxx.
  */
 
-
 #include "MidiEvent.h"
 
 #include "MidiDeviceBase.h"
@@ -42,35 +41,34 @@
 class CMidiDevice : public CMidiDeviceBase
 {
 public:
-    CMidiDevice();
-    ~CMidiDevice();
-    void init();
-    //! add a midi event to be played immediately
-    void playMidiEvent(const CMidiEvent & event);
-    int checkMidiInput();
-    CMidiEvent readMidiInput();
-    bool validMidiOutput() { return m_validOutput; }
+  CMidiDevice();
+  ~CMidiDevice();
+  void init();
+  //! add a midi event to be played immediately
+  void playMidiEvent(const CMidiEvent& event);
+  int checkMidiInput();
+  CMidiEvent readMidiInput();
+  bool validMidiOutput() { return m_validOutput; }
 
-    QStringList getMidiPortList(midiType_t type);
-    bool openMidiPort(midiType_t type, QString portName);
-    void closeMidiPort(midiType_t type, int index);
-    // based on the fluid synth settings
-    virtual int     midiSettingsSetStr(QString name, QString str);
-    virtual int     midiSettingsSetNum(QString name, double val);
-    virtual int     midiSettingsSetInt(QString name, int val);
-    virtual QString midiSettingsGetStr(QString name);
-    virtual double  midiSettingsGetNum(QString name);
-    virtual int     midiSettingsGetInt(QString name);
+  QStringList getMidiPortList(midiType_t type);
+  bool openMidiPort(midiType_t type, QString portName);
+  void closeMidiPort(midiType_t type, int index);
+  // based on the fluid synth settings
+  virtual int midiSettingsSetStr(QString name, QString str);
+  virtual int midiSettingsSetNum(QString name, double val);
+  virtual int midiSettingsSetInt(QString name, int val);
+  virtual QString midiSettingsGetStr(QString name);
+  virtual double midiSettingsGetNum(QString name);
+  virtual int midiSettingsGetInt(QString name);
 
 private:
-
-    CMidiDeviceBase* m_rtMidiDevice;
+  CMidiDeviceBase* m_rtMidiDevice;
 #if PB_USE_FLUIDSYNTH
-    CMidiDeviceBase* m_fluidSynthMidiDevice;
+  CMidiDeviceBase* m_fluidSynthMidiDevice;
 #endif
-    CMidiDeviceBase* m_selectedMidiInputDevice;
-    CMidiDeviceBase* m_selectedMidiOutputDevice;
-    bool m_validOutput;
+  CMidiDeviceBase* m_selectedMidiInputDevice;
+  CMidiDeviceBase* m_selectedMidiOutputDevice;
+  bool m_validOutput;
 };
 
 #endif //__MIDI_DEVICE_H__

@@ -31,41 +31,42 @@
 
 #include <QtWidgets>
 
-#include "Song.h"
 #include "Settings.h"
+#include "Song.h"
 
 #include "ui_GuiMidiSetupDialog.h"
 
-class GuiMidiSetupDialog : public QDialog, private Ui::GuiMidiSettingsDialog
+class GuiMidiSetupDialog
+  : public QDialog
+  , private Ui::GuiMidiSettingsDialog
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    GuiMidiSetupDialog(QWidget *parent = 0);
+  GuiMidiSetupDialog(QWidget* parent = 0);
 
-    void init(CSong* song, CSettings* settings);
+  void init(CSong* song, CSettings* settings);
 
 private slots:
-    void accept();
-    void on_midiInputCombo_activated (int index);
-    void on_midiOutputCombo_activated (int index);
-    void on_latencyFixButton_clicked ( bool checked );
-    void on_fluidAddButton_clicked ( bool checked );
-    void on_fluidRemoveButton_clicked ( bool checked );
-    void on_audioDriverCombo_currentIndexChanged ( int index );
-    void on_enableFluidSynth_stateChanged(int status);
-    void on_enableTimidity_stateChanged(int status);
+  void accept();
+  void on_midiInputCombo_activated(int index);
+  void on_midiOutputCombo_activated(int index);
+  void on_latencyFixButton_clicked(bool checked);
+  void on_fluidAddButton_clicked(bool checked);
+  void on_fluidRemoveButton_clicked(bool checked);
+  void on_audioDriverCombo_currentIndexChanged(int index);
+  void on_enableFluidSynth_stateChanged(int status);
+  void on_enableTimidity_stateChanged(int status);
 
 private:
-
-    void updateMidiInfoText();
-    void updateFluidInfoText();
-    void setDefaultFluidSynth();
-    CSettings* m_settings;
-    CSong* m_song;
-    int m_latencyFix;
-    bool m_latencyChanged;
-    bool m_midiChanged;
+  void updateMidiInfoText();
+  void updateFluidInfoText();
+  void setDefaultFluidSynth();
+  CSettings* m_settings;
+  CSong* m_song;
+  int m_latencyFix;
+  bool m_latencyChanged;
+  bool m_midiChanged;
 };
 
 #endif //__GUIMIDISETUPDIALOG_H__

@@ -29,65 +29,66 @@
 #ifndef __PIANO_H__
 #define __PIANO_H__
 
-#include "Draw.h"
 #include "Chord.h"
+#include "Draw.h"
 #include "Settings.h"
 
-
-typedef struct {
-        float posY;
-        float posYOriginal;
-        int type; // not used
-        int pitch;
+typedef struct
+{
+  float posY;
+  float posYOriginal;
+  int type; // not used
+  int pitch;
 } noteNameItem_t;
 
-typedef struct {
-        int pitchKey;       // This used to fined the Saved note off;
-        CChord savedNoteOffChord;
+typedef struct
+{
+  int pitchKey; // This used to fined the Saved note off;
+  CChord savedNoteOffChord;
 } savedNoteOffChord_t;
-
 
 class CPiano : protected CDraw
 {
 
 public:
-    CPiano(CSettings* settings) : CDraw(settings)
-    {
-    }
+  CPiano(CSettings* settings)
+    : CDraw(settings)
+  {}
 
-    void drawPianoInput();
+  void drawPianoInput();
 
-    void addPianistNote(whichPart_t part, CMidiEvent midiNote, bool good);
-    bool removePianistNote(int note);
+  void addPianistNote(whichPart_t part, CMidiEvent midiNote, bool good);
+  bool removePianistNote(int note);
 
-    int pianistAllNotesDown(); // Counts the number of notes the pianist has down
-    int pianistBadNotesDown();
-    void clear();
+  int pianistAllNotesDown(); // Counts the number of notes the pianist has down
+  int pianistBadNotesDown();
+  void clear();
 
-    void addSavedChord(CMidiEvent midiNote, CChord chord);
-    CChord removeSavedChord(int key);
+  void addSavedChord(CMidiEvent midiNote, CChord chord);
+  CChord removeSavedChord(int key);
 
-    CChord getGoodChord() { return m_goodChord; }
-    CChord getBadChord() { return m_badChord; }
+  CChord getGoodChord() { return m_goodChord; }
+  CChord getBadChord() { return m_badChord; }
 
-    void setRhythmTapping(bool state) { m_rhythmTapping = state; }
+  void setRhythmTapping(bool state) { m_rhythmTapping = state; }
 
 private:
-    void spaceNoteBunch(unsigned int bottomIndex, unsigned int topIndex);
-    void drawPianoInputLines(CChord* chord, CColor color, int lineLength);
-    void drawPianoInputNoteNames();
-    void spaceNoteNames();
-    void addNoteNameItem(float posY, int pitch, int type);
-    void removeNoteNameItem(int pitch);
-    void noteNameListClear();
+  void spaceNoteBunch(unsigned int bottomIndex, unsigned int topIndex);
+  void drawPianoInputLines(CChord* chord, CColor color, int lineLength);
+  void drawPianoInputNoteNames();
+  void spaceNoteNames();
+  void addNoteNameItem(float posY, int pitch, int type);
+  void removeNoteNameItem(int pitch);
+  void noteNameListClear();
 
-    noteNameItem_t  m_noteNameList[20];
-    savedNoteOffChord_t m_savedChordLookUp[20];
-    unsigned int m_noteNameListLength;
+  noteNameItem_t m_noteNameList[20];
+  savedNoteOffChord_t m_savedChordLookUp[20];
+  unsigned int m_noteNameListLength;
 
-    CChord m_goodChord;  // The colored note lines that appear on the score when the pianist plays
-    CChord m_badChord;
-    bool m_rhythmTapping;
+  CChord m_goodChord; // The colored note lines that appear on the score when
+                      // the pianist plays
+  CChord m_badChord;
+  bool m_rhythmTapping;
 };
 
 #endif //__PIANO_H__

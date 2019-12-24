@@ -29,82 +29,83 @@
 #include "Rating.h"
 #include "Conductor.h"
 
-void CRating::reset()
+void
+CRating::reset()
 {
-    m_totalNotesCount = 0;
-    m_wrongNoteCount = 0;
-    m_lateNoteCount = 0;
-    m_currentAccuracy = 0.5;
-    m_previousNoteCount = -1;
-    m_previousLateNoteCount = 0;
-    m_factor = 2.0;
+  m_totalNotesCount = 0;
+  m_wrongNoteCount = 0;
+  m_lateNoteCount = 0;
+  m_currentAccuracy = 0.5;
+  m_previousNoteCount = -1;
+  m_previousLateNoteCount = 0;
+  m_factor = 2.0;
+  m_goodAccuracyFlag = false;
+}
+
+void
+CRating::calculateAccuracy()
+{
+  int direction = 0;
+
+  if (m_previousNoteCount != m_totalNotesCount) {
+    m_previousNoteCount = m_totalNotesCount;
+    direction = 1;
+  }
+
+  if (m_previousLateNoteCount != m_lateNoteCount) {
+    m_previousLateNoteCount = m_lateNoteCount;
+    direction = -1;
+  }
+
+  if (direction != 0) {
+    typedef struct
+    {
+      float value;
+      float stepUp;
+      float stepDown;
+      CColor color;
+    } accuracyItem_t;
+    const accuracyItem_t accuracyTable[] = {
+      { 1.00,
+        0.01,
+        -0.08,
+        CColor(0.5, 0.5, 1.0) }, // Only the color is used on the top score
+      { 0.75, 0.01, -0.07, CColor(0.7, 0.3, 1.0) },
+      { 0.50, 0.01, -0.05, CColor(1.0, 0.6, 0.4) },
+      { 0.25, 0.01, -0.03, CColor(1.0, 0.3, 1.0) },
+      { 0.0, 0.015, -0.02, CColor(1.0, 0.4, 0.2) }
+    };
+
+    size_t i;
+    for (i = 0; i < arraySize(accuracyTable); i++) {
+      if (m_currentAccuracy >= accuracyTable[i].value ||
+          i + 1 == arraySize(accuracyTable)) {
+        float stepAmount =
+          (direction > 0) ? accuracyTable[i].stepUp : accuracyTable[i].stepDown;
+        if (stepAmount < 0 &&
+            CConductor::getPlayMode() == PB_PLAY_MODE_playAlong)
+          stepAmount = accuracyTable[i].stepUp + accuracyTable[i].stepDown;
+        m_currentAccuracy += stepAmount * m_factor;
+        break;
+      }
+    }
+
+    if (m_currentAccuracy < 0)
+      m_currentAccuracy = 0;
+    if (m_currentAccuracy > 1)
+      m_currentAccuracy = 1;
+
     m_goodAccuracyFlag = false;
+
+    for (i = 0; i < arraySize(accuracyTable); i++) {
+      if (m_currentAccuracy >= accuracyTable[i].value ||
+          i + 1 == arraySize(accuracyTable)) {
+        m_currentColor = accuracyTable[i].color;
+        if (m_currentAccuracy >=
+            accuracyTable[1].value) // the second row in the table
+          m_goodAccuracyFlag = true;
+        break;
+      }
+    }
+  }
 }
-
-void CRating::calculateAccuracy()
-{
-    int direction = 0;
-
-    if (m_previousNoteCount != m_totalNotesCount)
-    {
-        m_previousNoteCount = m_totalNotesCount;
-        direction = 1;
-    }
-
-    if (m_previousLateNoteCount != m_lateNoteCount)
-    {
-        m_previousLateNoteCount = m_lateNoteCount;
-        direction = -1;
-    }
-
-    if (direction != 0)
-    {
-        typedef struct
-        {
-            float value;
-            float stepUp;
-            float stepDown;
-            CColor color;
-        } accuracyItem_t;
-        const accuracyItem_t accuracyTable[] =
-        {
-            {1.00, 0.01, -0.08, CColor(0.5, 0.5, 1.0)}, // Only the color is used on the top score
-            {0.75, 0.01, -0.07, CColor(0.7, 0.3, 1.0)},
-            {0.50, 0.01, -0.05, CColor(1.0, 0.6, 0.4)},
-            {0.25, 0.01, -0.03, CColor(1.0, 0.3, 1.0)},
-            {0.0 , 0.015, -0.02, CColor(1.0, 0.4, 0.2)}
-        };
-
-        size_t i;
-        for (i = 0; i< arraySize(accuracyTable); i++)
-        {
-            if (m_currentAccuracy >= accuracyTable[i].value  || i+1 == arraySize(accuracyTable))
-            {
-                float stepAmount = (direction > 0) ? accuracyTable[i].stepUp : accuracyTable[i].stepDown;
-                if (stepAmount < 0 && CConductor::getPlayMode() == PB_PLAY_MODE_playAlong)
-                    stepAmount = accuracyTable[i].stepUp + accuracyTable[i].stepDown;
-                m_currentAccuracy += stepAmount *m_factor;
-                break;
-            }
-        }
-
-        if (m_currentAccuracy < 0) m_currentAccuracy = 0;
-        if (m_currentAccuracy > 1) m_currentAccuracy = 1;
-
-        m_goodAccuracyFlag = false;
-
-        for (i = 0; i< arraySize(accuracyTable); i++)
-        {
-            if (m_currentAccuracy >= accuracyTable[i].value || i+1 == arraySize(accuracyTable))
-            {
-                m_currentColor = accuracyTable[i].color;
-                if (m_currentAccuracy >= accuracyTable[ 1 ].value) // the second row in the table
-                    m_goodAccuracyFlag = true;
-                break;
-            }
-        }
-    }
-}
-
-
-

@@ -29,159 +29,158 @@
 #include "MidiDevice.h"
 #include "MidiDeviceRt.h"
 #if PB_USE_FLUIDSYNTH
-    #include "MidiDeviceFluidSynth.h"
+#include "MidiDeviceFluidSynth.h"
 #endif
-
-
-
 
 CMidiDevice::CMidiDevice()
 {
-    m_rtMidiDevice = new CMidiDeviceRt();
+  m_rtMidiDevice = new CMidiDeviceRt();
 #if PB_USE_FLUIDSYNTH
-    m_fluidSynthMidiDevice = new CMidiDeviceFluidSynth();
+  m_fluidSynthMidiDevice = new CMidiDeviceFluidSynth();
 #endif
-    m_selectedMidiInputDevice = m_rtMidiDevice;
-    m_selectedMidiOutputDevice = m_rtMidiDevice;
-    m_validOutput = false;
+  m_selectedMidiInputDevice = m_rtMidiDevice;
+  m_selectedMidiOutputDevice = m_rtMidiDevice;
+  m_validOutput = false;
 }
 
 CMidiDevice::~CMidiDevice()
 {
-    delete m_rtMidiDevice;
+  delete m_rtMidiDevice;
 #if PB_USE_FLUIDSYNTH
-    delete m_fluidSynthMidiDevice;
+  delete m_fluidSynthMidiDevice;
 #endif
 }
 
+void
+CMidiDevice::init()
+{}
 
-
-void CMidiDevice::init()
+QStringList
+CMidiDevice::getMidiPortList(midiType_t type)
 {
-}
-
-QStringList CMidiDevice::getMidiPortList(midiType_t type)
-{
-    QStringList list;
+  QStringList list;
 #if PB_USE_FLUIDSYNTH
-    list <<  m_fluidSynthMidiDevice->getMidiPortList(type);
+  list << m_fluidSynthMidiDevice->getMidiPortList(type);
 #endif
-    list <<  m_rtMidiDevice->getMidiPortList(type);
+  list << m_rtMidiDevice->getMidiPortList(type);
 
-    return list;
+  return list;
 }
 
-bool CMidiDevice::openMidiPort(midiType_t type, QString portName)
+bool
+CMidiDevice::openMidiPort(midiType_t type, QString portName)
 {
-    closeMidiPort(type, -1);
+  closeMidiPort(type, -1);
 
-    if (type == MIDI_INPUT)
-    {
-        if (m_rtMidiDevice->openMidiPort(type, portName))
-        {
-            m_selectedMidiOutputDevice = m_rtMidiDevice;
-            return true;
-        }
+  if (type == MIDI_INPUT) {
+    if (m_rtMidiDevice->openMidiPort(type, portName)) {
+      m_selectedMidiOutputDevice = m_rtMidiDevice;
+      return true;
     }
-    else
-    {
-        m_validOutput = false;
+  } else {
+    m_validOutput = false;
 
-        //m_selectedMidiOutputDevice->closeMidiPort(type, portName);
-        if ( m_rtMidiDevice->openMidiPort(type, portName) )
-        {
-            m_selectedMidiOutputDevice = m_rtMidiDevice;
-            m_validOutput = true;
-            return true;
-        }
-#if PB_USE_FLUIDSYNTH
-        if ( m_fluidSynthMidiDevice->openMidiPort(type, portName) )
-        {
-            m_selectedMidiOutputDevice = m_fluidSynthMidiDevice;
-            m_validOutput = true;
-            return true;
-        }
-#endif
+    // m_selectedMidiOutputDevice->closeMidiPort(type, portName);
+    if (m_rtMidiDevice->openMidiPort(type, portName)) {
+      m_selectedMidiOutputDevice = m_rtMidiDevice;
+      m_validOutput = true;
+      return true;
     }
-    return false;
+#if PB_USE_FLUIDSYNTH
+    if (m_fluidSynthMidiDevice->openMidiPort(type, portName)) {
+      m_selectedMidiOutputDevice = m_fluidSynthMidiDevice;
+      m_validOutput = true;
+      return true;
+    }
+#endif
+  }
+  return false;
 }
 
-void CMidiDevice::closeMidiPort(midiType_t type, int index)
+void
+CMidiDevice::closeMidiPort(midiType_t type, int index)
 {
-    if (m_selectedMidiOutputDevice == 0)
-        return;
+  if (m_selectedMidiOutputDevice == 0)
+    return;
 
-    m_selectedMidiOutputDevice->closeMidiPort(type, index);
+  m_selectedMidiOutputDevice->closeMidiPort(type, index);
 
-    m_selectedMidiOutputDevice = 0;
+  m_selectedMidiOutputDevice = 0;
 }
 
 //! add a midi event to be played immediately
-void CMidiDevice::playMidiEvent(const CMidiEvent & event)
+void
+CMidiDevice::playMidiEvent(const CMidiEvent& event)
 {
-    if (m_selectedMidiOutputDevice == 0)
-        return;
+  if (m_selectedMidiOutputDevice == 0)
+    return;
 
-    m_selectedMidiOutputDevice->playMidiEvent(event);
-    //event.printDetails(); // useful for debugging
+  m_selectedMidiOutputDevice->playMidiEvent(event);
+  // event.printDetails(); // useful for debugging
 }
 
-
 // Return the number of events waiting to be read from the midi device
-int CMidiDevice::checkMidiInput()
+int
+CMidiDevice::checkMidiInput()
 {
-    if (m_selectedMidiInputDevice == 0)
-        return 0;
+  if (m_selectedMidiInputDevice == 0)
+    return 0;
 
-    m_selectedMidiInputDevice->checkMidiInput();
-    return m_selectedMidiInputDevice->checkMidiInput();
+  m_selectedMidiInputDevice->checkMidiInput();
+  return m_selectedMidiInputDevice->checkMidiInput();
 }
 
 // reads the real midi event
-CMidiEvent CMidiDevice::readMidiInput()
+CMidiEvent
+CMidiDevice::readMidiInput()
 {
-    return m_selectedMidiInputDevice->readMidiInput();
+  return m_selectedMidiInputDevice->readMidiInput();
 }
 
-
-int CMidiDevice::midiSettingsSetStr(QString name, QString str)
+int
+CMidiDevice::midiSettingsSetStr(QString name, QString str)
 {
-    if (m_selectedMidiOutputDevice)
-        return m_selectedMidiOutputDevice->midiSettingsSetStr(name, str);
-    return 0;
+  if (m_selectedMidiOutputDevice)
+    return m_selectedMidiOutputDevice->midiSettingsSetStr(name, str);
+  return 0;
 }
 
-int CMidiDevice::midiSettingsSetNum(QString name, double val)
+int
+CMidiDevice::midiSettingsSetNum(QString name, double val)
 {
-    if (m_selectedMidiOutputDevice)
-        return m_selectedMidiOutputDevice->midiSettingsSetNum(name, val);
-    return 0;
+  if (m_selectedMidiOutputDevice)
+    return m_selectedMidiOutputDevice->midiSettingsSetNum(name, val);
+  return 0;
 }
 
-int CMidiDevice::midiSettingsSetInt(QString name, int val)
+int
+CMidiDevice::midiSettingsSetInt(QString name, int val)
 {
-    if (m_selectedMidiOutputDevice)
-        return m_selectedMidiOutputDevice->midiSettingsSetInt(name, val);
-    return 0;
+  if (m_selectedMidiOutputDevice)
+    return m_selectedMidiOutputDevice->midiSettingsSetInt(name, val);
+  return 0;
 }
 
-QString CMidiDevice::midiSettingsGetStr(QString name)
+QString
+CMidiDevice::midiSettingsGetStr(QString name)
 {
-    if (m_selectedMidiOutputDevice)
-        return m_selectedMidiOutputDevice->midiSettingsGetStr(name);
-    return QString();
+  if (m_selectedMidiOutputDevice)
+    return m_selectedMidiOutputDevice->midiSettingsGetStr(name);
+  return QString();
 }
 
-double CMidiDevice::midiSettingsGetNum(QString name)
+double
+CMidiDevice::midiSettingsGetNum(QString name)
 {
-    if (m_selectedMidiOutputDevice)
-        return m_selectedMidiOutputDevice->midiSettingsGetNum(name);
-    return 0.0;
+  if (m_selectedMidiOutputDevice)
+    return m_selectedMidiOutputDevice->midiSettingsGetNum(name);
+  return 0.0;
 }
 
-int CMidiDevice::midiSettingsGetInt(QString name)
+int
+CMidiDevice::midiSettingsGetInt(QString name)
 {
-    if (m_selectedMidiOutputDevice)
-        return m_selectedMidiOutputDevice->midiSettingsGetInt(name);
-    return 0;
+  if (m_selectedMidiOutputDevice)
+    return m_selectedMidiOutputDevice->midiSettingsGetInt(name);
+  return 0;
 }

@@ -29,51 +29,48 @@
 #ifndef __MIDI_DEVICE_RT_H__
 #define __MIDI_DEVICE_RT_H__
 
-
 #include "MidiDeviceBase.h"
 
 #include "rtmidi/RtMidi.h"
 
-
 class CMidiDeviceRt : public CMidiDeviceBase
 {
-    virtual void init();
-    //! add a midi event to be played immediately
-    virtual void playMidiEvent(const CMidiEvent & event);
-    virtual int checkMidiInput();
-    virtual CMidiEvent readMidiInput();
+  virtual void init();
+  //! add a midi event to be played immediately
+  virtual void playMidiEvent(const CMidiEvent& event);
+  virtual int checkMidiInput();
+  virtual CMidiEvent readMidiInput();
 
-    virtual QStringList getMidiPortList(midiType_t type);
+  virtual QStringList getMidiPortList(midiType_t type);
 
-    virtual bool openMidiPort(midiType_t type, QString portName);
-    virtual void closeMidiPort(midiType_t type, int index);
+  virtual bool openMidiPort(midiType_t type, QString portName);
+  virtual void closeMidiPort(midiType_t type, int index);
 
-    // based on the fluid synth settings
-    virtual int     midiSettingsSetStr(QString name, QString str);
-    virtual int     midiSettingsSetNum(QString name, double val);
-    virtual int     midiSettingsSetInt(QString name, int val);
-    virtual QString midiSettingsGetStr(QString name);
-    virtual double  midiSettingsGetNum(QString name);
-    virtual int     midiSettingsGetInt(QString name);
+  // based on the fluid synth settings
+  virtual int midiSettingsSetStr(QString name, QString str);
+  virtual int midiSettingsSetNum(QString name, double val);
+  virtual int midiSettingsSetInt(QString name, int val);
+  virtual QString midiSettingsGetStr(QString name);
+  virtual double midiSettingsGetNum(QString name);
+  virtual int midiSettingsGetInt(QString name);
 
 public:
-    CMidiDeviceRt();
-    ~CMidiDeviceRt();
-
+  CMidiDeviceRt();
+  ~CMidiDeviceRt();
 
 private:
+  RtMidiOut* m_midiout;
+  RtMidiIn* m_midiin;
 
-    RtMidiOut *m_midiout;
-    RtMidiIn *m_midiin;
+  // 0 for input, 1 for output
+  int m_midiPorts[2]; // select which MIDI output port to open
+  std::vector<unsigned char> m_inputMessage;
+  unsigned char
+    m_savedRawBytes[40]; // Raw data is used for used for a SYSTEM_EVENT
+  unsigned int m_rawDataIndex;
 
-    // 0 for input, 1 for output
-    int m_midiPorts[2];      // select which MIDI output port to open
-    std::vector<unsigned char> m_inputMessage;
-    unsigned char m_savedRawBytes[40]; // Raw data is used for used for a SYSTEM_EVENT
-    unsigned int m_rawDataIndex;
-
-    // kotechnology added function to create indexed string. Format: "1 - Example"
-    QString addIndexToString(QString name, int index);
+  // kotechnology added function to create indexed string. Format: "1 - Example"
+  QString addIndexToString(QString name, int index);
 };
 
 #endif //__MIDI_DEVICE_RT_H__

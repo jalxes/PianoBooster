@@ -29,31 +29,31 @@
 #ifndef __GUILOOPINGPOPUP_H__
 #define __GUILOOPINGPOPUP_H__
 
-
 #include <QtWidgets>
 
 #include "Song.h"
-
 
 #include "ui_GuiLoopingPopup.h"
 
 class CGLView;
 
-class GuiLoopingPopup : public QWidget, private Ui::GuiLoopingPopup
+class GuiLoopingPopup
+  : public QWidget
+  , private Ui::GuiLoopingPopup
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    GuiLoopingPopup(QWidget *parent = 0);
-    void init(CSong* song);
+  GuiLoopingPopup(QWidget* parent = 0);
+  void init(CSong* song);
 
 private slots:
-    void on_loopBarsSpin_valueChanged(double bars);
-    void closeEvent(QCloseEvent *event);
+  void on_loopBarsSpin_valueChanged(double bars);
+  void closeEvent(QCloseEvent* event);
 
 private:
-    void updateInfo();
-    CSong* m_song;
+  void updateInfo();
+  CSong* m_song;
 };
 
 #endif //__GUILOOPINGPOPUP_H__

@@ -26,222 +26,234 @@
 */
 /*********************************************************************************/
 
-#include <stdarg.h>
+#include "Score.h"
 #include "Cfg.h"
 #include "Draw.h"
-#include "Score.h"
+#include <stdarg.h>
 
-CScore::CScore(CSettings* settings) : CDraw(settings)
+CScore::CScore(CSettings* settings)
+  : CDraw(settings)
 {
-    size_t i;
-    m_piano = new CPiano(settings);
-    m_rating = 0;
-    for (i=0; i< arraySize(m_scroll); i++)
-    {
-        m_scroll[i] = new CScroll(i, settings);
-        m_scroll[i]->setChannel(i);
-    }
+  size_t i;
+  m_piano = new CPiano(settings);
+  m_rating = 0;
+  for (i = 0; i < arraySize(m_scroll); i++) {
+    m_scroll[i] = new CScroll(i, settings);
+    m_scroll[i]->setChannel(i);
+  }
 
-    m_activeScroll = -1;
-    m_stavesDisplayListId = 0;
-    m_scoreDisplayListId = 0;//glGenLists (1);
+  m_activeScroll = -1;
+  m_stavesDisplayListId = 0;
+  m_scoreDisplayListId = 0; // glGenLists (1);
 }
 
 CScore::~CScore()
 {
-    delete m_piano;
-    size_t i;
-    for (i=0; i< arraySize(m_scroll); i++)
-        delete m_scroll[i];
+  delete m_piano;
+  size_t i;
+  for (i = 0; i < arraySize(m_scroll); i++)
+    delete m_scroll[i];
 
-    if (m_scoreDisplayListId != 0)
-        glDeleteLists(m_scoreDisplayListId, 1);
-    m_scoreDisplayListId = 0;
+  if (m_scoreDisplayListId != 0)
+    glDeleteLists(m_scoreDisplayListId, 1);
+  m_scoreDisplayListId = 0;
 
-    if (m_stavesDisplayListId != 0)
-        glDeleteLists(m_stavesDisplayListId, 1);
-    m_stavesDisplayListId = 0;
+  if (m_stavesDisplayListId != 0)
+    glDeleteLists(m_stavesDisplayListId, 1);
+  m_stavesDisplayListId = 0;
 }
 
-void CScore::init()
+void
+CScore::init()
+{}
+
+void
+CScore::drawScroll(bool refresh)
 {
+  if (refresh == false) {
+    float topY = CStavePos(PB_PART_right, MAX_STAVE_INDEX).getPosY();
+    float bottomY = CStavePos(PB_PART_left, MIN_STAVE_INDEX).getPosY();
+    drColor(Cfg::backgroundColor());
+    glRectf(Cfg::scrollStartX(), topY, Cfg::getAppWidth(), bottomY);
+  }
+
+  if (m_stavesDisplayListId == 0)
+    m_stavesDisplayListId = glGenLists(1);
+
+  if (getCompileRedrawCount()) {
+
+    glNewList(m_stavesDisplayListId, GL_COMPILE_AND_EXECUTE);
+    drawSymbol(CSymbol(PB_SYMBOL_playingZone, CStavePos(PB_PART_both, 0)),
+               Cfg::playZoneX());
+    drawStaves(Cfg::scrollStartX(), Cfg::staveEndX());
+    glEndList();
+    // decrement the compile count until is reaches zero
+    forceCompileRedraw(0);
+
+  } else
+    glCallList(m_stavesDisplayListId);
+
+  if (m_settings->value("View/PianoKeyboard").toString() == "on") {
+    drawPianoKeyboard();
+  }
+  drawScrollingSymbols(true);
+  m_piano->drawPianoInput();
 }
 
-void CScore::drawScroll(bool refresh)
+void
+CScore::drawPianoKeyboard()
 {
-    if (refresh == false)
+  const static int keysCount = 88;
+  struct PianoKeyboard
+  {
+    int i, k;
+    float yStart;
+    float xSize;
+    float ySize;
+
+    float xPlaceSize;
+    float xKeySize;
+    char state[keysCount];
+    bool stopped;
+
+    PianoKeyboard()
     {
-        float topY = CStavePos(PB_PART_right, MAX_STAVE_INDEX).getPosY();
-        float bottomY = CStavePos(PB_PART_left, MIN_STAVE_INDEX).getPosY();
-        drColor (Cfg::backgroundColor());
-        glRectf(Cfg::scrollStartX(), topY, Cfg::getAppWidth(), bottomY);
+      i = 0;
+      k = 0;
+      yStart = 0.0f;
+      xSize = Cfg::staveEndX() - Cfg::staveStartX();
+      ySize = 30;
+
+      xPlaceSize = xSize / 52.0f;
+      xKeySize = xPlaceSize - xPlaceSize * 0.1f;
+      stopped = false;
     }
 
-    if (m_stavesDisplayListId == 0)
-        m_stavesDisplayListId = glGenLists (1);
-
-    if (getCompileRedrawCount())
+    void drawBlackKey(int i, int k)
     {
+      glPushMatrix();
+      float yBlackShift = ySize / 2.5;
+      float yBlackSize = ySize - yBlackShift;
+      glScalef(1, 1.4, 1);
+      glTranslatef(Cfg::staveStartX() + xPlaceSize * i - xPlaceSize / 3,
+                   yStart + yBlackShift,
+                   0.0);
 
-        glNewList (m_stavesDisplayListId, GL_COMPILE_AND_EXECUTE);
-            drawSymbol(CSymbol(PB_SYMBOL_playingZone,  CStavePos(PB_PART_both, 0)), Cfg::playZoneX());
-            drawStaves(Cfg::scrollStartX(), Cfg::staveEndX());
-        glEndList ();
-                // decrement the compile count until is reaches zero
-        forceCompileRedraw(0);
+      float xKeySize = this->xKeySize / 1.5;
 
+      CDraw::drColor(CColor(0.0, 0.0, 0.0));
+      if (state[k] == 1)
+        CDraw::drColor(stopped ? Cfg::playedStoppedColor() : Cfg::noteColor());
+      if (state[k] == 2)
+        CDraw::drColor(Cfg::playedBadColor());
+      glBegin(GL_QUADS);
+      glVertex2f(0, yBlackSize);
+      glVertex2f(xKeySize, yBlackSize);
+      glVertex2f(xKeySize, 0);
+      glVertex2f(0, 0);
+      glEnd();
+
+      glPopMatrix();
+      state[k] = 0;
     }
-    else
-        glCallList(m_stavesDisplayListId);
 
-    if (m_settings->value("View/PianoKeyboard").toString()=="on"){
-        drawPianoKeyboard();
+    void drawWhiteKey()
+    {
+      glPushMatrix();
+      glScalef(1, 1.4, 1);
+      glTranslatef(Cfg::staveStartX() + xPlaceSize * i++, yStart, 0.0);
+
+      CDraw::drColor(CColor(1.0, 1.0, 1.0));
+      if (state[k] == 1)
+        CDraw::drColor(stopped ? Cfg::playedStoppedColor() : Cfg::noteColor());
+      if (state[k] == 2)
+        CDraw::drColor(Cfg::playedBadColor());
+      glBegin(GL_QUADS);
+      glVertex2f(0, ySize);
+      glVertex2f(xKeySize, ySize);
+      glVertex2f(xKeySize, 0);
+      glVertex2f(0, 0);
+      glEnd();
+
+      glPopMatrix();
+      state[k++] = 0;
     }
-    drawScrollingSymbols(true);
-    m_piano->drawPianoInput();
+
+    void drawOctave()
+    {
+      drawWhiteKey();
+      int b1 = i, k1 = k++;
+      drawWhiteKey();
+      int b2 = i, k2 = k++;
+      drawWhiteKey();
+      drawWhiteKey();
+      int b3 = i, k3 = k++;
+      drawWhiteKey();
+      int b4 = i, k4 = k++;
+      drawWhiteKey();
+      int b5 = i, k5 = k++;
+      drawWhiteKey();
+      drawBlackKey(b1, k1);
+      drawBlackKey(b2, k2);
+      drawBlackKey(b3, k3);
+      drawBlackKey(b4, k4);
+      drawBlackKey(b5, k5);
+    }
+
+    void drawKeyboard()
+    {
+      i = k = 0;
+      drawWhiteKey();
+      int b1 = i, k1 = k++;
+      drawWhiteKey();
+      drawBlackKey(b1, k1);
+      for (int i = 0; i < 7; ++i)
+        drawOctave();
+      drawWhiteKey();
+    }
+  };
+  static PianoKeyboard pianoKeyboard;
+
+  CChord chord = m_piano->getBadChord();
+  for (int n = 0; n < chord.length(); ++n) {
+    int pitch = chord.getNote(n).pitch();
+    int k = pitch - 21;
+    k = k < 0 ? 0 : (k >= keysCount ? (keysCount - 1) : k);
+    pianoKeyboard.state[k] = 2;
+  }
+
+  for (size_t i = 0; i < arraySize(m_scroll); ++i) {
+    int notes[64];
+    memset(notes, 0, sizeof(notes));
+    bool stopped = m_scroll[i]->getKeyboardInfo(notes);
+    for (int* note = notes; *note; ++note) {
+      pianoKeyboard.stopped = stopped;
+      int k = *note - 21;
+      k = k < 0 ? 0 : (k >= keysCount ? (keysCount - 1) : k);
+      pianoKeyboard.state[k] = 1;
+    }
+  }
+
+  pianoKeyboard.drawKeyboard();
 }
 
-void CScore::drawPianoKeyboard(){
-    const static int keysCount = 88;
-    struct PianoKeyboard {
-        int i, k;
-        float yStart;
-        float xSize;
-        float ySize;
-
-        float xPlaceSize;
-        float xKeySize;
-        char state[keysCount];
-        bool stopped;
-
-        PianoKeyboard() {
-            i = 0; k = 0;
-            yStart = 0.0f;
-            xSize = Cfg::staveEndX() - Cfg::staveStartX();
-            ySize = 30;
-
-            xPlaceSize = xSize / 52.0f;
-            xKeySize = xPlaceSize - xPlaceSize * 0.1f;
-            stopped = false;
-        }
-
-        void drawBlackKey(int i, int k) {
-            glPushMatrix();
-            float yBlackShift = ySize / 2.5;
-            float yBlackSize = ySize - yBlackShift;
-            glScalef(1, 1.4, 1);
-            glTranslatef(Cfg::staveStartX() + xPlaceSize * i - xPlaceSize / 3,
-                yStart + yBlackShift, 0.0);
-
-            float xKeySize = this->xKeySize / 1.5;
-
-            CDraw::drColor (CColor(0.0, 0.0, 0.0));
-            if(state[k]==1) CDraw::drColor(stopped ? Cfg::playedStoppedColor() : Cfg::noteColor());
-            if(state[k]==2) CDraw::drColor(Cfg::playedBadColor());
-            glBegin(GL_QUADS);
-            glVertex2f(0, yBlackSize);
-            glVertex2f(xKeySize, yBlackSize);
-            glVertex2f(xKeySize, 0);
-            glVertex2f(0, 0);
-            glEnd();
-
-            glPopMatrix();
-            state[k] = 0;
-        }
-
-        void drawWhiteKey() {
-            glPushMatrix();
-            glScalef(1, 1.4, 1);
-            glTranslatef(Cfg::staveStartX() + xPlaceSize * i++, yStart, 0.0);
-
-            CDraw::drColor (CColor(1.0, 1.0, 1.0));
-            if(state[k]==1) CDraw::drColor(stopped ? Cfg::playedStoppedColor() : Cfg::noteColor());
-            if(state[k]==2) CDraw::drColor(Cfg::playedBadColor());
-            glBegin(GL_QUADS);
-            glVertex2f(0, ySize);
-            glVertex2f(xKeySize, ySize);
-            glVertex2f(xKeySize, 0);
-            glVertex2f(0, 0);
-            glEnd();
-
-            glPopMatrix();
-            state[k++] = 0;
-        }
-
-        void drawOctave() {
-            drawWhiteKey();
-            int b1 = i, k1 = k++;
-            drawWhiteKey();
-            int b2 = i, k2 = k++;
-            drawWhiteKey();
-            drawWhiteKey();
-            int b3 = i, k3 = k++;
-            drawWhiteKey();
-            int b4 = i, k4 = k++;
-            drawWhiteKey();
-            int b5 = i, k5 = k++;
-            drawWhiteKey();
-            drawBlackKey(b1, k1);
-            drawBlackKey(b2, k2);
-            drawBlackKey(b3, k3);
-            drawBlackKey(b4, k4);
-            drawBlackKey(b5, k5);
-        }
-
-        void drawKeyboard() {
-            i = k = 0;
-            drawWhiteKey();
-            int b1 = i, k1 = k++;
-            drawWhiteKey();
-            drawBlackKey(b1, k1);
-            for(int i=0; i<7; ++i) drawOctave();
-            drawWhiteKey();
-        }
-    };
-    static PianoKeyboard pianoKeyboard;
-
-    CChord chord = m_piano->getBadChord();
-    for(int n=0; n<chord.length(); ++n) {
-        int pitch = chord.getNote(n).pitch();
-        int k = pitch - 21;
-        k = k < 0 ? 0 : (k >= keysCount ? (keysCount-1) : k);
-        pianoKeyboard.state[k] = 2;
-    }
-
-    for(size_t i=0; i<arraySize(m_scroll); ++i) {
-        int notes[64];
-        memset(notes, 0, sizeof(notes));
-        bool stopped = m_scroll[i]->getKeyboardInfo(notes);
-        for(int *note=notes; *note; ++note) {
-            pianoKeyboard.stopped = stopped;
-            int k = *note - 21;
-            k = k < 0 ? 0 : (k >= keysCount ? (keysCount-1) : k);
-            pianoKeyboard.state[k] = 1;
-        }
-    }
-
-    pianoKeyboard.drawKeyboard();
-}
-
-void CScore::drawScore()
+void
+CScore::drawScore()
 {
-    if (getCompileRedrawCount())
-    {
-        if (m_scoreDisplayListId == 0)
-            m_scoreDisplayListId = glGenLists (1);
+  if (getCompileRedrawCount()) {
+    if (m_scoreDisplayListId == 0)
+      m_scoreDisplayListId = glGenLists(1);
 
-        glNewList (m_scoreDisplayListId, GL_COMPILE_AND_EXECUTE);
-            drColor (Cfg::staveColor());
+    glNewList(m_scoreDisplayListId, GL_COMPILE_AND_EXECUTE);
+    drColor(Cfg::staveColor());
 
-            drawSymbol(CSymbol(PB_SYMBOL_gClef, CStavePos(PB_PART_right, -1)), Cfg::clefX()); // The Treble Clef
-            drawSymbol(CSymbol(PB_SYMBOL_fClef, CStavePos(PB_PART_left, 1)), Cfg::clefX());
-            drawKeySignature(CStavePos::getKeySignature());
-            drawStaves(Cfg::staveStartX(), Cfg::scrollStartX());
-        glEndList ();
-    }
-    else
-        glCallList(m_scoreDisplayListId);
+    drawSymbol(CSymbol(PB_SYMBOL_gClef, CStavePos(PB_PART_right, -1)),
+               Cfg::clefX()); // The Treble Clef
+    drawSymbol(CSymbol(PB_SYMBOL_fClef, CStavePos(PB_PART_left, 1)),
+               Cfg::clefX());
+    drawKeySignature(CStavePos::getKeySignature());
+    drawStaves(Cfg::staveStartX(), Cfg::scrollStartX());
+    glEndList();
+  } else
+    glCallList(m_scoreDisplayListId);
 }
-
-
-

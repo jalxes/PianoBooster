@@ -26,368 +26,402 @@
 */
 /*********************************************************************************/
 
-#include "Cfg.h"
 #include "Scroll.h"
+#include "Cfg.h"
 
 //#define NOTE_AHEAD_GAP          50
 //#define NOTE_BEHIND_GAP          14
 
-#define NOTE_AHEAD_GAP          22 // the notes on the left hand side of the score
-#define NOTE_BEHIND_GAP         14
+#define NOTE_AHEAD_GAP 22 // the notes on the left hand side of the score
+#define NOTE_BEHIND_GAP 14
 
-void CScroll::compileSlot(CSlotDisplayList info)
+void
+CScroll::compileSlot(CSlotDisplayList info)
 {
 
-    if (m_show == false || info.m_displayListId == 0)
-        return;
+  if (m_show == false || info.m_displayListId == 0)
+    return;
 
-    glNewList (info.m_displayListId, GL_COMPILE);
-    glTranslatef (info.getDeltaTime() * m_noteSpacingFactor, 0.0, 0.0); /*  move position  */
+  glNewList(info.m_displayListId, GL_COMPILE);
+  glTranslatef(
+    info.getDeltaTime() * m_noteSpacingFactor, 0.0, 0.0); /*  move position  */
 
-    info.transpose(m_transpose);
-    drawSlot(&info);
-    /*
-    int i;
-    CStavePos stavePos;
-    int av8Left = info.getAv8Left();
-    for (i=0; i < info.length(); i++)
-    {
-        stavePos.notePos(info.getSymbol(i).getHand(), info.getSymbol(i).getNote());
-        //ppLogTrace ("compileSlot len %d id %2d next %2d time %2d type %2d note %2d", info.length(), info.m_displayListId,
-        //info.m_nextDisplayListId, info.getDeltaTime(), info.getSymbol(i).getType(), info.getSymbol(i).getNote());
+  info.transpose(m_transpose);
+  drawSlot(&info);
+  /*
+  int i;
+  CStavePos stavePos;
+  int av8Left = info.getAv8Left();
+  for (i=0; i < info.length(); i++)
+  {
+      stavePos.notePos(info.getSymbol(i).getHand(),
+  info.getSymbol(i).getNote());
+      //ppLogTrace ("compileSlot len %d id %2d next %2d time %2d type %2d note
+  %2d", info.length(), info.m_displayListId,
+      //info.m_nextDisplayListId, info.getDeltaTime(),
+  info.getSymbol(i).getType(), info.getSymbol(i).getNote());
 
-        drawSymbol(info.getSymbol(i), 0.0, stavePos.getPosYRelative()); // we add this  back when drawing this symbol
-    }
-    */
-    glCallList (info.m_nextDisplayListId);    /* Automatically draw the next slot even if it is not there yet */
-    glEndList ();
+      drawSymbol(info.getSymbol(i), 0.0, stavePos.getPosYRelative()); // we add
+  this  back when drawing this symbol
+  }
+  */
+  glCallList(info.m_nextDisplayListId); /* Automatically draw the next slot even
+                                           if it is not there yet */
+  glEndList();
 }
 
 /*! Insert a symbol into the display list
  * @return  false when we have run out of symbols
  */
-bool CScroll::insertSlots()
+bool
+CScroll::insertSlots()
 {
-    GLuint nextListId = 0;
+  GLuint nextListId = 0;
 
-    if (m_headSlot.length() == 0)
-        m_headSlot = m_notation->nextSlot();
-    if (m_headSlot.length() == 0 || m_headSlot.getSymbolType(0) == PB_SYMBOL_theEndMarker) // this means we have reached the end of the file
-        return false;
+  if (m_headSlot.length() == 0)
+    m_headSlot = m_notation->nextSlot();
+  if (m_headSlot.length() == 0 ||
+      m_headSlot.getSymbolType(0) ==
+        PB_SYMBOL_theEndMarker) // this means we have reached the end of the
+                                // file
+    return false;
 
-    while (true)
-    {
-        float headDelta = deltaAdjust(m_deltaHead) * m_noteSpacingFactor;
-        float slotDetlta = Cfg::staveEndX() - Cfg::playZoneX() - m_headSlot.getDeltaTime() * m_noteSpacingFactor - NOTE_BEHIND_GAP;
+  while (true) {
+    float headDelta = deltaAdjust(m_deltaHead) * m_noteSpacingFactor;
+    float slotDetlta = Cfg::staveEndX() - Cfg::playZoneX() -
+                       m_headSlot.getDeltaTime() * m_noteSpacingFactor -
+                       NOTE_BEHIND_GAP;
 
-        if (headDelta > slotDetlta)
-            break;
+    if (headDelta > slotDetlta)
+      break;
 
-        if (m_show)
-        {
-            if (m_symbolID == 0)
-                m_symbolID = glGenLists (1);
+    if (m_show) {
+      if (m_symbolID == 0)
+        m_symbolID = glGenLists(1);
 
-            nextListId = glGenLists (1);
-        }
-        else
-        {
-            nextListId = m_symbolID = 0;
-        }
-
-        CSlotDisplayList info(m_headSlot, m_symbolID, nextListId);
-
-        m_deltaHead += info.getDeltaTime() * SPEED_ADJUST_FACTOR;
-
-        compileSlot(info);
-
-        m_scrollQueue->push(info);
-        m_symbolID  = nextListId;
-
-        m_headSlot = m_notation->nextSlot();
-        if (m_headSlot.length() == 0 || m_headSlot.getSymbolType(0) == PB_SYMBOL_theEndMarker) // this means we have reached the end of the file
-            return false;
+      nextListId = glGenLists(1);
+    } else {
+      nextListId = m_symbolID = 0;
     }
-    return true;
+
+    CSlotDisplayList info(m_headSlot, m_symbolID, nextListId);
+
+    m_deltaHead += info.getDeltaTime() * SPEED_ADJUST_FACTOR;
+
+    compileSlot(info);
+
+    m_scrollQueue->push(info);
+    m_symbolID = nextListId;
+
+    m_headSlot = m_notation->nextSlot();
+    if (m_headSlot.length() == 0 ||
+        m_headSlot.getSymbolType(0) ==
+          PB_SYMBOL_theEndMarker) // this means we have reached the end of the
+                                  // file
+      return false;
+  }
+  return true;
 }
 
-void CScroll::removeEarlyTimingMakers()
+void
+CScroll::removeEarlyTimingMakers()
 {
-    float delta = deltaAdjust(m_deltaTail) * m_noteSpacingFactor  + Cfg::playZoneX() - Cfg::scrollStartX() - NOTE_AHEAD_GAP;
-    // only look a few steps (10) into the scroll queue
-    for (int i = 0; i < 10 && i < m_scrollQueue->length(); i++ )
-    {
-        if (delta < -(m_scrollQueue->index(i).getLeftSideDeltaTime() * m_noteSpacingFactor))
-        {
-            m_scrollQueue->indexPtr(i)->clearAllNoteTimmings();
-            compileSlot(m_scrollQueue->index(i));
-        }
-        delta += m_scrollQueue->index(i).getDeltaTime() * m_noteSpacingFactor;
+  float delta = deltaAdjust(m_deltaTail) * m_noteSpacingFactor +
+                Cfg::playZoneX() - Cfg::scrollStartX() - NOTE_AHEAD_GAP;
+  // only look a few steps (10) into the scroll queue
+  for (int i = 0; i < 10 && i < m_scrollQueue->length(); i++) {
+    if (delta < -(m_scrollQueue->index(i).getLeftSideDeltaTime() *
+                  m_noteSpacingFactor)) {
+      m_scrollQueue->indexPtr(i)->clearAllNoteTimmings();
+      compileSlot(m_scrollQueue->index(i));
     }
+    delta += m_scrollQueue->index(i).getDeltaTime() * m_noteSpacingFactor;
+  }
 }
 
-void CScroll::removeSlots()
+void
+CScroll::removeSlots()
 {
-    while (m_scrollQueue->length() > 0)
-    {
-        if (deltaAdjust(m_deltaTail) * m_noteSpacingFactor > -Cfg::playZoneX() + Cfg::scrollStartX() + NOTE_AHEAD_GAP -(m_scrollQueue->index(0).getLeftSideDeltaTime() * m_noteSpacingFactor) )
-            break;
+  while (m_scrollQueue->length() > 0) {
+    if (deltaAdjust(m_deltaTail) * m_noteSpacingFactor >
+        -Cfg::playZoneX() + Cfg::scrollStartX() + NOTE_AHEAD_GAP -
+          (m_scrollQueue->index(0).getLeftSideDeltaTime() *
+           m_noteSpacingFactor))
+      break;
 
-        CSlotDisplayList info = m_scrollQueue->pop();
+    CSlotDisplayList info = m_scrollQueue->pop();
 
-        m_deltaTail += info.getDeltaTime() * SPEED_ADJUST_FACTOR;
+    m_deltaTail += info.getDeltaTime() * SPEED_ADJUST_FACTOR;
 
-        //ppLogTrace("Remove slot id %2d time %2d type %2d note %2d", info.m_displayListId, info.getDeltaTime(), info.getSymbol(0).getType(), info.getSymbol(0).getNote());
+    // ppLogTrace("Remove slot id %2d time %2d type %2d note %2d",
+    // info.m_displayListId, info.getDeltaTime(), info.getSymbol(0).getType(),
+    // info.getSymbol(0).getNote());
 
-        if (info.m_displayListId)
-            glDeleteLists( info.m_displayListId, 1);
-        if (m_wantedIndex > 0)
-            m_wantedIndex--;  // also the Chord has moved down one place
-        else
-        {
-            m_wantedIndex = 0;
-            m_wantedDelta = m_deltaTail;
-        }
+    if (info.m_displayListId)
+      glDeleteLists(info.m_displayListId, 1);
+    if (m_wantedIndex > 0)
+      m_wantedIndex--; // also the Chord has moved down one place
+    else {
+      m_wantedIndex = 0;
+      m_wantedDelta = m_deltaTail;
     }
+  }
 }
-
 
 //! Draw all the symbols that we have in the list
-void CScroll::drawScrollingSymbols(bool show)
+void
+CScroll::drawScrollingSymbols(bool show)
 {
-    insertSlots();  // new symbols at the end of the score
-    removeSlots();  // delete old symbols no longer required
-    removeEarlyTimingMakers();
+  insertSlots(); // new symbols at the end of the score
+  removeSlots(); // delete old symbols no longer required
+  removeEarlyTimingMakers();
 
-    if (show == false)   // Just update the queue only
-        return;
+  if (show == false) // Just update the queue only
+    return;
 
-    if (m_scrollQueue->length() == 0 || m_scrollQueue->indexPtr(0)->m_displayListId == 0)
-        return;
+  if (m_scrollQueue->length() == 0 ||
+      m_scrollQueue->indexPtr(0)->m_displayListId == 0)
+    return;
 
-    glPushMatrix();
-    glTranslatef (Cfg::playZoneX() + deltaAdjust(m_deltaTail) * m_noteSpacingFactor, CStavePos::getStaveCenterY(), 0.0);
+  glPushMatrix();
+  glTranslatef(Cfg::playZoneX() +
+                 deltaAdjust(m_deltaTail) * m_noteSpacingFactor,
+               CStavePos::getStaveCenterY(),
+               0.0);
 
-    BENCHMARK(8, "glTranslatef");
+  BENCHMARK(8, "glTranslatef");
 
-    if (m_scrollQueue->length() > 0)
-        glCallList (m_scrollQueue->indexPtr(0)->m_displayListId);
-    BENCHMARK(9, "glCallList");
+  if (m_scrollQueue->length() > 0)
+    glCallList(m_scrollQueue->indexPtr(0)->m_displayListId);
+  BENCHMARK(9, "glCallList");
 
-    glPopMatrix();
+  glPopMatrix();
 }
 
-
-void CScroll::scrollDeltaTime(int ticks)
+void
+CScroll::scrollDeltaTime(int ticks)
 {
-    m_deltaHead -= ticks;
-    m_deltaTail -= ticks;
-    m_wantedDelta -= ticks;
+  m_deltaHead -= ticks;
+  m_deltaTail -= ticks;
+  m_wantedDelta -= ticks;
 }
 
-bool CScroll::validPianistChord(int index)
+bool
+CScroll::validPianistChord(int index)
 {
-    CSlot* pSlot = m_scrollQueue->indexPtr(index);
+  CSlot* pSlot = m_scrollQueue->indexPtr(index);
 
-    assert(pSlot->length()!=0);
-    if (pSlot->getSymbol(0).getType() >= PB_SYMBOL_noteHead)
-    {
-        if (m_displayHand == PB_PART_both)
-            return true;
+  assert(pSlot->length() != 0);
+  if (pSlot->getSymbol(0).getType() >= PB_SYMBOL_noteHead) {
+    if (m_displayHand == PB_PART_both)
+      return true;
 
-        //eventually we need two slot queues one for each hand
-        for (int i = 0; i < pSlot->length(); i++)
-        {
+    // eventually we need two slot queues one for each hand
+    for (int i = 0; i < pSlot->length(); i++) {
 
-            if (pSlot->getSymbol(i).getHand() ==  m_displayHand)
-                return true;
-        }
+      if (pSlot->getSymbol(i).getHand() == m_displayHand)
+        return true;
     }
-    return false;
+  }
+  return false;
 }
 
-int CScroll::findWantedChord(int note, CColor color, int wantedDelta)
+int
+CScroll::findWantedChord(int note, CColor color, int wantedDelta)
 {
-    if (color == Cfg::playedBadColor()) // fixme should be an enum
-        return m_wantedIndex;
-    {
-        while ( m_wantedIndex + 1 < m_scrollQueue->length())
-        {
-            if ((m_wantedDelta + m_scrollQueue->indexPtr(m_wantedIndex)->getDeltaTime() * SPEED_ADJUST_FACTOR) >= -wantedDelta)
-            {
-                if (validPianistChord(m_wantedIndex) == true)
-                    break;
-            }
-            m_wantedDelta += m_scrollQueue->indexPtr(m_wantedIndex)->getDeltaTime() * SPEED_ADJUST_FACTOR;
-            m_wantedIndex++;
-        }
-    }
+  if (color == Cfg::playedBadColor()) // fixme should be an enum
     return m_wantedIndex;
-}
-
-void CScroll::setPlayedNoteColor(int note, CColor color, int wantedDelta, int pianistTimming)
-{
-    int index;
-    if (m_wantedIndex >= m_scrollQueue->length())
-        return;
-    index = findWantedChord(note, color, wantedDelta);
-    note -= m_transpose;
-    m_scrollQueue->indexPtr(index)->setNoteColor(note, color);
-    if (pianistTimming != NOT_USED)
-    {
-        pianistTimming = deltaAdjust(pianistTimming) * DEFAULT_PPQN / CMidiFile::getPulsesPerQuarterNote();
-
-        m_scrollQueue->indexPtr(index)->setNoteTimming(note, pianistTimming);
+  {
+    while (m_wantedIndex + 1 < m_scrollQueue->length()) {
+      if ((m_wantedDelta +
+           m_scrollQueue->indexPtr(m_wantedIndex)->getDeltaTime() *
+             SPEED_ADJUST_FACTOR) >= -wantedDelta) {
+        if (validPianistChord(m_wantedIndex) == true)
+          break;
+      }
+      m_wantedDelta += m_scrollQueue->indexPtr(m_wantedIndex)->getDeltaTime() *
+                       SPEED_ADJUST_FACTOR;
+      m_wantedIndex++;
     }
-    compileSlot(m_scrollQueue->index(index));
+  }
+  return m_wantedIndex;
 }
 
-
-void CScroll::refresh()
+void
+CScroll::setPlayedNoteColor(int note,
+                            CColor color,
+                            int wantedDelta,
+                            int pianistTimming)
 {
-    int i;
-    if (m_show == false)
-        return;
+  int index;
+  if (m_wantedIndex >= m_scrollQueue->length())
+    return;
+  index = findWantedChord(note, color, wantedDelta);
+  note -= m_transpose;
+  m_scrollQueue->indexPtr(index)->setNoteColor(note, color);
+  if (pianistTimming != NOT_USED) {
+    pianistTimming = deltaAdjust(pianistTimming) * DEFAULT_PPQN /
+                     CMidiFile::getPulsesPerQuarterNote();
 
-    for ( i = 0; i < m_scrollQueue->length(); i++)
-        compileSlot(m_scrollQueue->index(i));
+    m_scrollQueue->indexPtr(index)->setNoteTimming(note, pianistTimming);
+  }
+  compileSlot(m_scrollQueue->index(index));
 }
 
-bool CScroll::getKeyboardInfo(int *notes)
+void
+CScroll::refresh()
 {
-    int stoppedScrollIdx = -1;
-    for(int i=0; i<m_scrollQueue->length(); ++i) {
-        CSlotDisplayList &info = *m_scrollQueue->indexPtr(i);
-        if(m_show == false || info.m_displayListId == 0) continue;
+  int i;
+  if (m_show == false)
+    return;
 
-        CSlot* slot = &info;
-        for(int j=0; j<slot->length(); ++j) {
-            if(slot->getSymbol(j).getType() < PB_SYMBOL_noteHead) continue;
-            if(slot->getSymbol(j).getColor() == Cfg::playedStoppedColor()) {
-                stoppedScrollIdx = i;
-                break;
-            }
-        }
-        if(stoppedScrollIdx > -1) break;
+  for (i = 0; i < m_scrollQueue->length(); i++)
+    compileSlot(m_scrollQueue->index(i));
+}
+
+bool
+CScroll::getKeyboardInfo(int* notes)
+{
+  int stoppedScrollIdx = -1;
+  for (int i = 0; i < m_scrollQueue->length(); ++i) {
+    CSlotDisplayList& info = *m_scrollQueue->indexPtr(i);
+    if (m_show == false || info.m_displayListId == 0)
+      continue;
+
+    CSlot* slot = &info;
+    for (int j = 0; j < slot->length(); ++j) {
+      if (slot->getSymbol(j).getType() < PB_SYMBOL_noteHead)
+        continue;
+      if (slot->getSymbol(j).getColor() == Cfg::playedStoppedColor()) {
+        stoppedScrollIdx = i;
+        break;
+      }
     }
-    if(stoppedScrollIdx > -1) {
-        for(int i=0; i<stoppedScrollIdx; ++i) {
-            CSlotDisplayList &info = *m_scrollQueue->indexPtr(i);
-            if(m_show == false || info.m_displayListId == 0) continue;
+    if (stoppedScrollIdx > -1)
+      break;
+  }
+  if (stoppedScrollIdx > -1) {
+    for (int i = 0; i < stoppedScrollIdx; ++i) {
+      CSlotDisplayList& info = *m_scrollQueue->indexPtr(i);
+      if (m_show == false || info.m_displayListId == 0)
+        continue;
 
-            CSlot* slot = &info;
-            for(int j=0; j<slot->length(); ++j) {
-                if(slot->getSymbol(j).getType() < PB_SYMBOL_noteHead) continue;
-                slot->getSymbolPtr(j)->setColor(Cfg::playedGoodColor());
-            }
-        }
+      CSlot* slot = &info;
+      for (int j = 0; j < slot->length(); ++j) {
+        if (slot->getSymbol(j).getType() < PB_SYMBOL_noteHead)
+          continue;
+        slot->getSymbolPtr(j)->setColor(Cfg::playedGoodColor());
+      }
     }
+  }
 
-    int *note = notes;
-    for(int i=0; i<m_scrollQueue->length(); ++i) {
-        CSlotDisplayList &info = *m_scrollQueue->indexPtr(i);
-        if(m_show == false || info.m_displayListId == 0) continue;
+  int* note = notes;
+  for (int i = 0; i < m_scrollQueue->length(); ++i) {
+    CSlotDisplayList& info = *m_scrollQueue->indexPtr(i);
+    if (m_show == false || info.m_displayListId == 0)
+      continue;
 
-        CSlot* slot = &info;
-        bool stopped = false;
-        for(int j=0; j<slot->length(); ++j) {
-            if(slot->getSymbol(j).getType() < PB_SYMBOL_noteHead) continue;
+    CSlot* slot = &info;
+    bool stopped = false;
+    for (int j = 0; j < slot->length(); ++j) {
+      if (slot->getSymbol(j).getType() < PB_SYMBOL_noteHead)
+        continue;
 
-            if(slot->getSymbol(j).getColor() == Cfg::noteColor() ||
-               slot->getSymbol(j).getColor() == Cfg::playedStoppedColor())
-                *(note++) = slot->getSymbol(j).getNote();
-            if(slot->getSymbol(j).getColor() == Cfg::playedStoppedColor()) stopped = true;
-        }
-        if(note != notes) return stopped;
+      if (slot->getSymbol(j).getColor() == Cfg::noteColor() ||
+          slot->getSymbol(j).getColor() == Cfg::playedStoppedColor())
+        *(note++) = slot->getSymbol(j).getNote();
+      if (slot->getSymbol(j).getColor() == Cfg::playedStoppedColor())
+        stopped = true;
     }
-    return false;
+    if (note != notes)
+      return stopped;
+  }
+  return false;
 }
 
-void CScroll::transpose(int transpose)
+void
+CScroll::transpose(int transpose)
 {
-    if (m_transpose == transpose)
-        return;
+  if (m_transpose == transpose)
+    return;
 
-    m_transpose = transpose;
-    refresh();
+  m_transpose = transpose;
+  refresh();
 }
 
-void CScroll::showScroll(bool show)
+void
+CScroll::showScroll(bool show)
 {
-    int i;
-    GLuint nextListId = 0;
+  int i;
+  GLuint nextListId = 0;
 
-    m_show = show;
-    if (show == true)
-    {
+  m_show = show;
+  if (show == true) {
 
-        if (m_symbolID == 0)
-            m_symbolID = glGenLists (1);
+    if (m_symbolID == 0)
+      m_symbolID = glGenLists(1);
 
-
-        // add in the missing GL display list
-        for ( i = 0; i < m_scrollQueue->length(); i++)
-        {
-            //assert (m_scrollQueue->indexPtr(i)->m_displayListId == 0);
-            nextListId = glGenLists (1);
-            m_scrollQueue->indexPtr(i)->m_displayListId = m_symbolID;
-            m_scrollQueue->indexPtr(i)->m_nextDisplayListId = nextListId;
-            m_symbolID  = nextListId;
-
-        }
-        // And now compile the slot (remember that each slot points to the next one)
-        for ( i = 0; i < m_scrollQueue->length(); i++)
-        {
-            compileSlot(m_scrollQueue->index(i));
-        }
+    // add in the missing GL display list
+    for (i = 0; i < m_scrollQueue->length(); i++) {
+      // assert (m_scrollQueue->indexPtr(i)->m_displayListId == 0);
+      nextListId = glGenLists(1);
+      m_scrollQueue->indexPtr(i)->m_displayListId = m_symbolID;
+      m_scrollQueue->indexPtr(i)->m_nextDisplayListId = nextListId;
+      m_symbolID = nextListId;
     }
-    else
-    {
-        // Remove all the gl items
-        for ( i = 0; i < m_scrollQueue->length(); i++)
-        {
-            if (m_scrollQueue->indexPtr(i)->m_displayListId != 0 && m_scrollQueue->indexPtr(i)->m_displayListId != nextListId)
-                glDeleteLists(m_scrollQueue->index(i).m_displayListId, 1);
-            m_scrollQueue->indexPtr(i)->m_displayListId = 0;
-
-            nextListId = m_scrollQueue->indexPtr(i)->m_nextDisplayListId;
-            m_scrollQueue->indexPtr(i)->m_nextDisplayListId = 0;
-
-            if (nextListId != 0)
-                glDeleteLists(nextListId, 1);
-
-        }
-        if (m_symbolID != 0)
-           glDeleteLists(m_symbolID, 1);
-        m_symbolID = 0;
+    // And now compile the slot (remember that each slot points to the next one)
+    for (i = 0; i < m_scrollQueue->length(); i++) {
+      compileSlot(m_scrollQueue->index(i));
     }
-}
+  } else {
+    // Remove all the gl items
+    for (i = 0; i < m_scrollQueue->length(); i++) {
+      if (m_scrollQueue->indexPtr(i)->m_displayListId != 0 &&
+          m_scrollQueue->indexPtr(i)->m_displayListId != nextListId)
+        glDeleteLists(m_scrollQueue->index(i).m_displayListId, 1);
+      m_scrollQueue->indexPtr(i)->m_displayListId = 0;
 
+      nextListId = m_scrollQueue->indexPtr(i)->m_nextDisplayListId;
+      m_scrollQueue->indexPtr(i)->m_nextDisplayListId = 0;
 
-CScroll::CSlotDisplayList::CSlotDisplayList(const CSlot& slot, GLuint displayListId, GLuint nextDisplayListId) : CSlot(slot),
-    m_displayListId(displayListId), m_nextDisplayListId(nextDisplayListId)
-{
-    // It is all done in the initialisation list
-}
-
-void CScroll::reset()
-{
-    int i;
-    m_wantedIndex = 0;
-    m_wantedDelta = 0;
-    m_deltaHead = m_deltaTail = 0;
-    m_notation->reset();
-    m_headSlot.clear();
-    for ( i = 0; i < m_scrollQueue->length(); i++)
-    {
-        if (m_scrollQueue->index(i).m_displayListId)
-            glDeleteLists(m_scrollQueue->index(i).m_displayListId, 1);
+      if (nextListId != 0)
+        glDeleteLists(nextListId, 1);
     }
     if (m_symbolID != 0)
-       glDeleteLists(m_symbolID, 1);
+      glDeleteLists(m_symbolID, 1);
     m_symbolID = 0;
+  }
+}
 
-    m_scrollQueue->clear();
-    m_ppqnFactor = static_cast<float>(DEFAULT_PPQN) / CMidiFile::getPulsesPerQuarterNote();
-    m_noteSpacingFactor = m_ppqnFactor * HORIZONTAL_SPACING_FACTOR;
+CScroll::CSlotDisplayList::CSlotDisplayList(const CSlot& slot,
+                                            GLuint displayListId,
+                                            GLuint nextDisplayListId)
+  : CSlot(slot)
+  , m_displayListId(displayListId)
+  , m_nextDisplayListId(nextDisplayListId)
+{
+  // It is all done in the initialisation list
+}
+
+void
+CScroll::reset()
+{
+  int i;
+  m_wantedIndex = 0;
+  m_wantedDelta = 0;
+  m_deltaHead = m_deltaTail = 0;
+  m_notation->reset();
+  m_headSlot.clear();
+  for (i = 0; i < m_scrollQueue->length(); i++) {
+    if (m_scrollQueue->index(i).m_displayListId)
+      glDeleteLists(m_scrollQueue->index(i).m_displayListId, 1);
+  }
+  if (m_symbolID != 0)
+    glDeleteLists(m_symbolID, 1);
+  m_symbolID = 0;
+
+  m_scrollQueue->clear();
+  m_ppqnFactor =
+    static_cast<float>(DEFAULT_PPQN) / CMidiFile::getPulsesPerQuarterNote();
+  m_noteSpacingFactor = m_ppqnFactor * HORIZONTAL_SPACING_FACTOR;
 }

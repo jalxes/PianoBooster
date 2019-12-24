@@ -26,46 +26,40 @@
 */
 /*********************************************************************************/
 
-
 #include "Tempo.h"
 
 int CTempo::m_cfg_followTempoAmount = 0;
 int CTempo::m_cfg_maxJumpAhead = 0;
 
-
-void CTempo::enableFollowTempo(bool enable)
+void
+CTempo::enableFollowTempo(bool enable)
 {
-    if (enable)
-    {
-        m_cfg_maxJumpAhead = 1;
-        m_cfg_followTempoAmount = 1;
-    }
-    else
-    {
-        m_cfg_maxJumpAhead = 0;
-        m_cfg_followTempoAmount = 0;
-    }
+  if (enable) {
+    m_cfg_maxJumpAhead = 1;
+    m_cfg_followTempoAmount = 1;
+  } else {
+    m_cfg_maxJumpAhead = 0;
+    m_cfg_followTempoAmount = 0;
+  }
 }
 
-void CTempo::adjustTempo(int * ticks)
+void
+CTempo::adjustTempo(int* ticks)
 {
-    if (m_jumpAheadDelta && m_cfg_maxJumpAhead && m_savedWantedChord)
-    {
-        if (m_jumpAheadDelta > 0)
-            *ticks += m_jumpAheadDelta;
+  if (m_jumpAheadDelta && m_cfg_maxJumpAhead && m_savedWantedChord) {
+    if (m_jumpAheadDelta > 0)
+      *ticks += m_jumpAheadDelta;
 
-        // Automatically adjust the speed
-        m_userSpeed = m_userSpeed + m_userSpeed * m_jumpAheadDelta * 0.00002;
+    // Automatically adjust the speed
+    m_userSpeed = m_userSpeed + m_userSpeed * m_jumpAheadDelta * 0.00002;
 
-        if (m_userSpeed> 2.0) m_userSpeed = 2.0;
-        if (m_userSpeed < 0.2) m_userSpeed = 0.2;
-        printf("%03.0f  %5d\r",m_userSpeed *100, m_jumpAheadDelta );
-        fflush(stdout);
+    if (m_userSpeed > 2.0)
+      m_userSpeed = 2.0;
+    if (m_userSpeed < 0.2)
+      m_userSpeed = 0.2;
+    printf("%03.0f  %5d\r", m_userSpeed * 100, m_jumpAheadDelta);
+    fflush(stdout);
 
-        m_jumpAheadDelta = 0;
-    }
+    m_jumpAheadDelta = 0;
+  }
 }
-
-
-
-

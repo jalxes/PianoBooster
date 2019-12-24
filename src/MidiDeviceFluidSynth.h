@@ -29,48 +29,43 @@
 #ifndef __MIDI_DEVICE_FLUIDSYNTH_H__
 #define __MIDI_DEVICE_FLUIDSYNTH_H__
 
-
 #include "MidiDeviceBase.h"
 
 #include <fluidsynth.h>
 
-
 class CMidiDeviceFluidSynth : public CMidiDeviceBase
 {
-    virtual void init();
-    //! add a midi event to be played immediately
-    virtual void playMidiEvent(const CMidiEvent & event);
-    virtual int checkMidiInput();
-    virtual CMidiEvent readMidiInput();
-    virtual QStringList getMidiPortList(midiType_t type);
+  virtual void init();
+  //! add a midi event to be played immediately
+  virtual void playMidiEvent(const CMidiEvent& event);
+  virtual int checkMidiInput();
+  virtual CMidiEvent readMidiInput();
+  virtual QStringList getMidiPortList(midiType_t type);
 
-    virtual bool openMidiPort(midiType_t type, QString portName);
-    virtual void closeMidiPort(midiType_t type, int index);
+  virtual bool openMidiPort(midiType_t type, QString portName);
+  virtual void closeMidiPort(midiType_t type, int index);
 
-    // based on the fluid synth settings
-    virtual int     midiSettingsSetStr(QString name, QString str);
-    virtual int     midiSettingsSetNum(QString name, double val);
-    virtual int     midiSettingsSetInt(QString name, int val);
-    virtual QString midiSettingsGetStr(QString name);
-    virtual double  midiSettingsGetNum(QString name);
-    virtual int     midiSettingsGetInt(QString name);
+  // based on the fluid synth settings
+  virtual int midiSettingsSetStr(QString name, QString str);
+  virtual int midiSettingsSetNum(QString name, double val);
+  virtual int midiSettingsSetInt(QString name, int val);
+  virtual QString midiSettingsGetStr(QString name);
+  virtual double midiSettingsGetNum(QString name);
+  virtual int midiSettingsGetInt(QString name);
 
 public:
-    CMidiDeviceFluidSynth();
-    ~CMidiDeviceFluidSynth();
-
+  CMidiDeviceFluidSynth();
+  ~CMidiDeviceFluidSynth();
 
 private:
+  unsigned char
+    m_savedRawBytes[40]; // Raw data is used for used for a SYSTEM_EVENT
+  unsigned int m_rawDataIndex;
 
-    unsigned char m_savedRawBytes[40]; // Raw data is used for used for a SYSTEM_EVENT
-    unsigned int m_rawDataIndex;
-
-    fluid_settings_t* m_fluidSettings;
-    fluid_synth_t* m_synth;
-    fluid_audio_driver_t* m_audioDriver;
-    int m_soundFontId;
-
-
+  fluid_settings_t* m_fluidSettings;
+  fluid_synth_t* m_synth;
+  fluid_audio_driver_t* m_audioDriver;
+  int m_soundFontId;
 };
 
 #endif //__MIDI_DEVICE_FLUIDSYNTH_H__

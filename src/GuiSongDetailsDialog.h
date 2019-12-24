@@ -29,36 +29,36 @@
 #ifndef __GUISONGDETAILSDIALOG_H__
 #define __GUISONGDETAILSDIALOG_H__
 
-
 #include <QtWidgets>
 
-#include "Song.h"
 #include "Settings.h"
-
+#include "Song.h"
 
 #include "ui_GuiSongDetailsDialog.h"
 
 class CGLView;
 
-class GuiSongDetailsDialog : public QDialog, private Ui::GuiSongDetailsDialog
+class GuiSongDetailsDialog
+  : public QDialog
+  , private Ui::GuiSongDetailsDialog
 {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    GuiSongDetailsDialog(QWidget *parent = 0);
-    void init(CSong* song, CSettings* settings);
+  GuiSongDetailsDialog(QWidget* parent = 0);
+  void init(CSong* song, CSettings* settings);
 
 private slots:
-    void accept();
-    void on_leftHandChannelCombo_activated (int index);
-    void on_rightHandChannelCombo_activated (int index);
+  void accept();
+  void on_leftHandChannelCombo_activated(int index);
+  void on_rightHandChannelCombo_activated(int index);
 
 private:
-    void updateSongInfoText();
+  void updateSongInfoText();
 
-    CSettings* m_settings;
-    CSong* m_song;
-    CTrackList* m_trackList;
+  CSettings* m_settings;
+  CSong* m_song;
+  CTrackList* m_trackList;
 };
 
 #endif //__GUISONGDETAILSDIALOG_H__
