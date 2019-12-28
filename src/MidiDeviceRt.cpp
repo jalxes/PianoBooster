@@ -31,14 +31,14 @@
 CMidiDeviceRt::CMidiDeviceRt()
 {
   try {
-    m_midiout = new RtMidiOut();
+    m_midiout = new RtMidiOut(RtMidi::UNIX_JACK);
   } catch (RtMidiError& error) {
     error.printMessage();
     exit(1);
   }
 
   try {
-    m_midiin = new RtMidiIn();
+    m_midiin = new RtMidiIn(RtMidi::UNIX_JACK);
   } catch (RtMidiError& error) {
     error.printMessage();
     exit(1);
